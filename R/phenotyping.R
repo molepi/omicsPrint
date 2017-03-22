@@ -124,7 +124,7 @@
 ##' @author mvaniterson
 ##' @export
 phenotyping <- function(phenotype, features, train.frac=2/3, methods = c("ridge", "elastic-net", "lasso", "gradient-boosting", "partial-least-squares"), ntop=NULL, verbose=FALSE, ...){
-  
+
     if(length(phenotype) != ncol(features))
         stop("Number of phenotypes is not equal to the number of columns of the features!")
 
@@ -133,7 +133,8 @@ phenotyping <- function(phenotype, features, train.frac=2/3, methods = c("ridge"
                          several.ok = TRUE)
 
     if(is.numeric(phenotype)) {
-        message("Phenotyping on continuous phenotype ...")
+        if(verbose)
+            message("Phenotyping on continuous phenotype ...")
 
         trainid <- sample(which(!is.na(phenotype)), size=floor(train.frac*sum(!is.na(phenotype))))
         family <- "gaussian"
@@ -141,7 +142,8 @@ phenotyping <- function(phenotype, features, train.frac=2/3, methods = c("ridge"
         .performance <- .performanceContinuous
 
     } else if( nlevels(factor(phenotype)) == 2 ){
-        message("Phenotyping on dichotomous phenotype ...")
+        if(verbose)
+            message("Phenotyping on dichotomous phenotype ...")
 
         sp <- split(which(!is.na(phenotype)), phenotype[!is.na(phenotype)]) ##stratified sampling of test and train samples
         trainid <- unlist(lapply(sp, function(x) sample(x, length(x)*train.frac)), use.names=FALSE)
@@ -150,7 +152,8 @@ phenotyping <- function(phenotype, features, train.frac=2/3, methods = c("ridge"
         .performance <- .performanceCategorical
     }
     else {
-        message("Phenotyping on categorical phenotype ...")
+        if(verbose)
+            message("Phenotyping on categorical phenotype ...")
 
         sp <- split(which(!is.na(phenotype)), phenotype[!is.na(phenotype)]) ##stratified sampling of test and train samples
         trainid <- unlist(lapply(sp, function(x) sample(x, length(x)*train.frac)), use.names=FALSE)
@@ -164,7 +167,8 @@ phenotyping <- function(phenotype, features, train.frac=2/3, methods = c("ridge"
 
     top.feat <- NULL
     if(!is.null(ntop)) {
-        message("Select top ", ntop, " correlated features using train data ...")
+        if(verbose)
+            message("Select top ", ntop, " correlated features using train data ...")
         ##Feature selection based on abs pearson correlation
         rho <- cor(as.numeric(phenotype[trainid]), t(features[,trainid]))
         ord <- order(abs(rho), decreasing=TRUE)[1:ntop]
@@ -174,7 +178,8 @@ phenotyping <- function(phenotype, features, train.frac=2/3, methods = c("ridge"
     }
 
     phenotyped <- lapply(methods, function(method) {
-        message("fit ", method, " regression model ...")
+        if(verbose)
+            message("fit ", method, " regression model ...")
         phenotyped <- switch(method,
                              "ridge" = .glmnetFit(phenotype, t(features), trainid, testid,
                                                   family = family, cv.opt = "lambda.min", type = type,
