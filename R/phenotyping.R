@@ -162,7 +162,8 @@ phenotyping <- function(phenotype, features, train.frac=2/3, methods = c("ridge"
         .performance <- .performanceCategorical
     }
 
-    message("Using ", 100*round(train.frac,2), "% of data of train and ", 100*round(1 - train.frac, 2), "% for testing ...")
+    if(verbose)
+        message("Using ", 100*round(train.frac,2), "% of data of train and ", 100*round(1 - train.frac, 2), "% for testing ...")
     testid <- setdiff(1:length(phenotype), c(trainid, which(is.na(phenotype))))
 
     top.feat <- NULL
