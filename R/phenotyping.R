@@ -104,7 +104,6 @@
     invisible(performance)
 }
 
-
 ##' build prediction models for phenotype based on given matrix of features
 ##'
 ##' all penalized regression models e.g. n << p
