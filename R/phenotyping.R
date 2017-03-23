@@ -21,7 +21,7 @@
     Xtest <-  X[testid,]
     ytest <- y[testid]
 
-    fit <- gbm(y~., data=data.frame(y=ytrain, x=Xtrain), distribution = family, n.trees=n.trees, interaction.depth=interaction.depth, cv.folds=cv.folds, shrinkage=shrinkage)
+    fit <- gbm(y~., data=data.frame(y=ytrain, x=Xtrain), distribution = family, n.trees=n.trees, interaction.depth=interaction.depth, cv.folds=cv.folds, shrinkage=shrinkage, n.cores=1)
 
     test <- predict(fit, data.frame(y=ytest, x=Xtest), type = "response", n.trees = n.trees)
     if(type == "class")
@@ -43,13 +43,13 @@
     ytest <- y[testid]
 
     if(type != "class") {
-        fit <- plsr(y~., ncomp=min(nrow(X), ncomp), data=data.frame(y=ytrain, x=Xtrain), validation="CV")
+        fit <- plsr(y~., ncomp=min(ncol(Xtrain), ncomp), data=data.frame(y=ytrain, x=Xtrain), validation="CV")
         ncomp.onesigma <- selectNcomp(fit, method = cv.opt, plot = FALSE)
         test <- predict(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=ytest, x=Xtest), type = type)
         predicted <- predict(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=y, x=X), type=type)
     }
     else {
-        fit <- cppls(y~., ncomp=min(nrow(X), ncomp), data=data.frame(y=ytrain, x=Xtrain), validation="CV")
+        fit <- cppls(y~., ncomp=min(ncol(Xtrain), ncomp), data=data.frame(y=ytrain, x=Xtrain), validation="CV")
         ncomp.onesigma <- selectNcomp(fit, method = cv.opt, plot = FALSE)
         test <- predict(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=ytest, x=Xtest), type = "score")
         predicted <- predict(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=y, x=X), type = "score")
