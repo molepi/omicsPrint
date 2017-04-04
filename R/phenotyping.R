@@ -1,3 +1,26 @@
+.mboostFit <- function(y, X, trainid, testid, family, type, ...){
+    Xtrain <- X[trainid,]
+    ytrain <- y[trainid]
+
+    Xtest <-  X[testid,]
+    ytest <- y[testid]
+
+    family <- switch(family,
+                     gaussian = Gaussian(),
+                     binomial = Binomial(),
+                     multinomial = Multinomial())
+
+    fit <- glmboost(y~., data=data.frame(y=ytrain, x=Xtrain), family=family, ...)
+    ms <- cvrisk(fit) ##should be better but use multicore    
+    ##fit <- glmboost(y~., data=data.frame(y=ytrain, x=Xtrain), family=family, control = boost_control(mstop = mstop(ms)))
+    
+    test <- predict(fit, Xtest, type = type, control = boost_control(mstop = mstop(ms)))
+    predicted <- predict(fit, X, type = type, control = boost_control(mstop = mstop(ms)))
+
+    list(test=as.vector(test), predicted=as.vector(predicted))
+}
+
+
 .glmnetFit <- function(y, X, trainid, testid, family, cv.opt, type, alpha){
 
     Xtrain <- X[trainid,]
@@ -34,7 +57,7 @@
     list(test=as.vector(test), predicted=as.vector(predicted))
 }
 
-.plsFit <- function(y, X, trainid, testid, ncomp=50, cv.opt, type){
+.plsFit <- function(y, X, trainid, testid, ncomp, cv.opt, type){
 
     Xtrain <- X[trainid,]
     ytrain <- y[trainid]
@@ -43,16 +66,16 @@
     ytest <- y[testid]
 
     if(type != "class") {
-        fit <- plsr(y~., ncomp=min(ncol(Xtrain), ncomp), data=data.frame(y=ytrain, x=Xtrain), validation="CV")
+        fit <- plsr(y~., ncomp=min(ncol(X), ncomp), data=data.frame(y=ytrain, x=Xtrain), validation="CV")
         ncomp.onesigma <- selectNcomp(fit, method = cv.opt, plot = FALSE)
         test <- predict(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=ytest, x=Xtest), type = type)
         predicted <- predict(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=y, x=X), type=type)
     }
     else {
-        fit <- cppls(y~., ncomp=min(ncol(Xtrain), ncomp), data=data.frame(y=ytrain, x=Xtrain), validation="CV")
+        fit <- cppls(y~., ncomp=min(ncol(X), ncomp), data=data.frame(y=model.matrix(ytrain), x=Xtrain), validation="CV")
         ncomp.onesigma <- selectNcomp(fit, method = cv.opt, plot = FALSE)
-        test <- predict(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=ytest, x=Xtest), type = "score")
-        predicted <- predict(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=y, x=X), type = "score")
+        test <- predict(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=model.matrix(ytest), x=Xtest), type = "score")
+        predicted <- predict(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=model.matrix(y), x=X), type = "score")
     }
 
     list(test=as.vector(test), predicted=as.vector(predicted))
@@ -118,17 +141,18 @@
 ##' @importFrom glmnet cv.glmnet
 ##' @importFrom pls plsr selectNcomp cppls
 ##' @importFrom gbm gbm
-##' @importFrom stats cor median predict
+##' @importFrom mboost glmboost cvrisk boost_control mstop Binomial Gaussian Multinomial
+##' @importFrom stats cor median predict model.matrix
 ##' @return list containing predictions, validation results, train and test set identifiers and selected top features
 ##' @author mvaniterson
 ##' @export
-phenotyping <- function(phenotype, features, train.frac=2/3, methods = c("ridge", "elastic-net", "lasso", "gradient-boosting", "partial-least-squares"), ntop=NULL, verbose=FALSE, ...){
+phenotyping <- function(phenotype, features, train.frac=2/3, methods = c("ridge", "elastic-net", "lasso", "gbm", "mboost", "pls"), ntop=NULL, verbose=FALSE, ...){
 
     if(length(phenotype) != ncol(features))
         stop("Number of phenotypes is not equal to the number of columns of the features!")
 
     methods <- match.arg(methods,
-                         choices =  c("ridge", "elastic-net", "lasso", "gradient-boosting", "partial-least-squares"),
+                         choices =  c("ridge", "elastic-net", "lasso", "gbm", "mboost", "pls"),
                          several.ok = TRUE)
 
     if(is.numeric(phenotype)) {
@@ -193,11 +217,14 @@ phenotyping <- function(phenotype, features, train.frac=2/3, methods = c("ridge"
                                                   family = family, cv.opt = "lambda.min", type = type,
                                                   alpha=1),
 
-                             "gradient-boosting" = .gbmFit(phenotype, t(features), trainid, testid,
-                                                           family = family, type = type,
-                                                           n.trees=200, interaction.depth=4, cv.folds=5, shrinkage=0.005),
+                             "gbm" = .gbmFit(phenotype, t(features), trainid, testid,
+                                             family = family, type = type,
+                                             n.trees=200, interaction.depth=4, cv.folds=5, shrinkage=0.005),
+                             
+                             "mboost" = .mboostFit(phenotype, t(features), trainid, testid,
+                                                   family = family),
 
-                             "partial-least-squares" = .plsFit(phenotype, t(features), trainid, testid,
+                             "pls" = .plsFit(phenotype, t(features), trainid, testid,
                                                                cv.opt = "onesigma", type = type, ncomp=50),
 
                              message("Method, ", method, ", not implemented!"))

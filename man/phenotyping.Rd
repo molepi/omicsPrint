@@ -5,8 +5,8 @@
 \title{predict phenotypes}
 \usage{
 phenotyping(phenotype, features, train.frac = 2/3, methods = c("ridge",
-  "elastic-net", "lasso", "gradient-boosting", "partial-least-squares"),
-  ntop = NULL, verbose = FALSE, ...)
+  "elastic-net", "lasso", "gbm", "mboost", "pls"), ntop = NULL,
+  verbose = FALSE, ...)
 }
 \arguments{
 \item{phenotype}{vector with phenotype either numeric of categorical}
