@@ -10,16 +10,15 @@
                      binomial = Binomial(),
                      multinomial = Multinomial())
 
-    fit <- glmboost(y~., data=data.frame(y=ytrain, x=Xtrain), family=family, ...)
-    ms <- cvrisk(fit) ##should be better but use multicore    
-    ##fit <- glmboost(y~., data=data.frame(y=ytrain, x=Xtrain), family=family, control = boost_control(mstop = mstop(ms)))
-    
-    test <- predict(fit, Xtest, type = type, control = boost_control(mstop = mstop(ms)))
-    predicted <- predict(fit, X, type = type, control = boost_control(mstop = mstop(ms)))
+    fit <- glmboost(y~., data=data.frame(y=ytrain, x=Xtrain), family=family, center=TRUE)    
+    ms <- AIC(fit)    
+    fit <- glmboost(y~., data=data.frame(y=ytrain, x=Xtrain), family=family, control = boost_control(mstop = mstop(ms)))
+
+    test <- predict(fit, data.frame(y=ytest, x=Xtest), type = type)                    
+    predicted <- predict(fit, data.frame(y=y, x=X), type = type)
 
     list(test=as.vector(test), predicted=as.vector(predicted))
 }
-
 
 .glmnetFit <- function(y, X, trainid, testid, family, cv.opt, type, alpha){
 
@@ -141,8 +140,8 @@
 ##' @importFrom glmnet cv.glmnet
 ##' @importFrom pls plsr selectNcomp cppls
 ##' @importFrom gbm gbm
-##' @importFrom mboost glmboost cvrisk boost_control mstop Binomial Gaussian Multinomial
-##' @importFrom stats cor median predict model.matrix
+##' @importFrom mboost glmboost boost_control mstop Binomial Gaussian Multinomial
+##' @importFrom stats cor median predict model.matrix AIC
 ##' @return list containing predictions, validation results, train and test set identifiers and selected top features
 ##' @author mvaniterson
 ##' @export
