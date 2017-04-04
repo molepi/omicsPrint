@@ -10,12 +10,14 @@
                      binomial = Binomial(),
                      multinomial = Multinomial())
 
-    fit <- glmboost(y~., data=data.frame(y=ytrain, x=Xtrain), family=family, center=TRUE)    
-    ms <- AIC(fit)    
-    fit <- glmboost(y~., data=data.frame(y=ytrain, x=Xtrain), family=family, control = boost_control(mstop = mstop(ms)))
-
-    test <- predict(fit, data.frame(y=ytest, x=Xtest), type = type)                    
-    predicted <- predict(fit, data.frame(y=y, x=X), type = type)
+    fit <- glmboost(y~., data=data.frame(y=ytrain, x=Xtrain), family=family, center=TRUE)
+    
+    ##cv10f <- cv(model.weights(fit), type = "kfold")
+    ##ms <- cvrisk(fit, folds = cv10f, papply = lapply) ##bplapply    
+    ms <- AIC(fit)
+    
+    test <- predict(fit[mstop(ms)], data.frame(y=ytest, x=Xtest), type = type)                    
+    predicted <- predict(fit[mstop(ms)], data.frame(y=y, x=X), type = type)
 
     list(test=as.vector(test), predicted=as.vector(predicted))
 }
@@ -221,7 +223,7 @@ phenotyping <- function(phenotype, features, train.frac=2/3, methods = c("ridge"
                                              n.trees=200, interaction.depth=4, cv.folds=5, shrinkage=0.005),
                              
                              "mboost" = .mboostFit(phenotype, t(features), trainid, testid,
-                                                   family = family),
+                                                   family = family, type = type),
 
                              "pls" = .plsFit(phenotype, t(features), trainid, testid,
                                                                cv.opt = "onesigma", type = type, ncomp=50),
