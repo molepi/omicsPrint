@@ -232,29 +232,29 @@ hashRelations <- function(relations, idx.col="id.x", idy.col="id.y", rel.col="re
 ##' @author mvaniterson
 ##' @importFrom stats kmeans
 ##' @export
-beta2genotype <- function(betas, na.rm=TRUE, minSep = 0.25, minSize = 5, centers = c(0.2, 0.5, 0.8)){
+beta2genotype <- function (betas, na.rm = TRUE, minSep = 0.25, minSize = 5, centers = c(0.2, 0.5, 0.8))
+{
+    genotypes <- apply(betas, 1, function(x) {
 
-    genotypes <- apply(betas, 1, function(x){
-        km <- try(kmeans(as.numeric(x), centers), silent=TRUE)
-        if(!inherits(km, 'try-error')) {
-            if (all(abs(rep(km$centers, 3) - rep(km$centers, each=3))[-c(1,5,9)] > minSep)) {
-                if(100*min(as.numeric(table(km$cluster)))/length(x) > minSize)
+        km <- try(kmeans(as.numeric(x), centers), silent = TRUE)
+
+        if (!inherits(km, "try-error")) {
+            if (all(abs(rep(km$centers, 3) - rep(km$centers,
+                                                 each = 3))[-c(1, 5, 9)] > minSep)) {
+                if (100 * min(as.numeric(table(km$cluster)))/length(x) >
+                    minSize)
                     return(km$cluster)
             }
         }
-        else
-            return(rep(NA, length(x)))         ##no clusters detected
+        return(rep(NA, length(x)))
     })
 
     genotypes <- t(genotypes)
     colnames(genotypes) <- colnames(betas)
     rownames(genotypes) <- rownames(betas)
-
-    if(na.rm) {
-        nas <- apply(betas, 2, function(x) sum(is.na(x))/length(x))
+    if (na.rm) {
         nas <- apply(genotypes, 1, anyNA)
         genotypes <- genotypes[!nas, ]
     }
-
     genotypes
 }
