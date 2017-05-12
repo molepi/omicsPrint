@@ -1,0 +1,92 @@
+---
+title: "omicsPrint"
+author: "Maarten van Iterson"
+date: "`r Sys.Date()`"
+output:
+  md_document:
+    variant: markdown_github
+vignette: >
+  %\VignetteIndexEntry{omicsPrint}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+## Introduction
+
+## Verify sample relations: 450K data
+
+```{r, prepare, echo=FALSE, cache=TRUE}
+suppressPackageStartupMessages({
+require(BBMRIomics)
+require(omicsPrint)
+require(DNAmArray)
+require(BiocParallel)  
+})
+##create targets file for LLS
+samplesheets <- getView("methylationSamplesheet", usrpwd=RP3_MDB_USRPWD, url=RP3_MDB, verbose=FALSE)
+path450k <- file.path(VM_BASE_DATA, "IlluminaHumanMethylation450k")
+samplesheets$biobank_id <- gsub("-.*$", "", samplesheets$ids)
+samplesheets$Basename <- with(samplesheets, file.path(path450k, "raw", Sentrix_Barcode,
+                                                        paste(Sentrix_Barcode, Sentrix_Position, sep = "_")))
+samplesheets <- samplesheets[!duplicated(samplesheets$run_id),]
+runs <- getView("getMethylationRuns", usrpwd=RP3_MDB_USRPWD, url=RP3_MDB, verbose=FALSE)
+runs <- runs[runs$qc == "passed",]    
+targets <- samplesheets[samplesheets$run_id %in% runs$run_id, ]
+targets <- targets[targets$biobank_id == "LLS",]
+##create data.fraem with realtions
+relations <- getView("getRelations", usrpwd=RP3_MDB_USRPWD, url=RP3_MDB, verbose=FALSE)
+relations <- subset(relations, !is.na(relation_type))
+relx <- getView("getMethylationRuns", usrpwd=RP3_MDB_USRPWD, url=RP3_MDB, verbose=FALSE)
+colnames(relx)[colnames(relx) == "run_id"] <- "idx"
+relx <- relx[!is.na(relx$idx),]
+relx <- relx[!duplicated(relx$idx),]
+relations <- merge(relations, relx[,c("ids", "idx")], by="ids") #link idx
+relations <- relations[!is.na(relations$idx),]
+##obtain reported relations
+bRels <- merge(relations, relx[, c("ids", "idx")], by.x="relation_id", by.y="ids")[,c("idx.x", "idx.y", "relation_type")]
+##obtain technical relations
+tRels <- merge(relx, relx, by="ids")[, c("idx.x", "idx.y")]
+tRels$relation_type <- "identical"
+relations <- rbind(bRels, tRels)
+    
+```
+
+```{r, targets, cache=TRUE}
+head(targets)
+```
+
+```{r, betas, cache=TRUE}
+library(DNAmArray)
+data(hg19.GoNLsnps)
+cpgs <- unique(hg19.GoNLsnps$probe)
+library(BiocParallel)
+register(MulticoreParam(2))
+RGset <- read.metharray.exp.par(targets[1:20,], verbose=FALSE)
+betas <- getBeta(RGset)
+betas <- rbind(betas[rownames(betas) %in% cpgs,], getSnpBeta(RGset))
+dim(betas)
+```
+
+```{r, betas2genotypes, cache=TRUE}
+xCalls <- beta2genotype(betas)
+```
+
+
+```{r, relations, cache=TRUE}
+head(relations)
+rHash <- hashRelations(relations, idx.col="idx.x", idy.col="idx.y")
+```
+
+```{r, allelesharing, cache=TRUE}
+data <- alleleSharing(x=xCalls, y=NULL, rHash=rHash, verbose=TRUE)
+head(data)
+predict(data)
+```
+
+
+## SessionInfo
+
+```{r}
+sessionInfo()
+```
