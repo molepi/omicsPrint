@@ -204,7 +204,17 @@ predict <- function(data, n=100, plot.it=TRUE){
     invisible(data[id,])
 }
 
-
+##' construct hash table with relations
+##'
+##' constructs hash table with relations for efficient lookup
+##' @title construct hash table with relations
+##' @param relations data.frame with relations and their mapping identifiers
+##' @param idx.col columname conaining mapping identifiers
+##' @param idy.col columname conaining mapping identifiers
+##' @param rel.col columname containing the relations
+##' @return envirnoment
+##' @author mvaniterson
+##' @export
 hashRelations <- function(relations, idx.col="id.x", idy.col="id.y", rel.col="relation_type"){
     hash <- new.env()
     keys <- paste(relations[, idx.col], relations[, idy.col], sep=":")
