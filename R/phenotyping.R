@@ -139,7 +139,7 @@
 ##' @param ntop number of selected top features (top means correlate with the phenotype of interest)
 ##' @param verbose defaults to FALSE
 ##' @param ... optional arguments
-##' @importFrom glmnet cv.glmnet
+##' @importFrom glmnet cv.glmnet predict.glmnet
 ##' @importFrom pls plsr selectNcomp cppls
 ##' @importFrom gbm gbm
 ##' @importFrom mboost glmboost boost_control mstop Binomial Gaussian Multinomial
