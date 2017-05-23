@@ -31,8 +31,8 @@
     ytest <- y[testid]
 
     fit <- cv.glmnet(Xtrain, ytrain, alpha = alpha, family = family)
-    test <- glmnet:::predict.glmnet(fit, Xtest, s = cv.opt, type = type)
-    predicted <- glmnet:::predict.glmnet(fit, X, s = cv.opt, type = type)
+    test <- glmnet:::predict(fit, Xtest, s = cv.opt, type = type)
+    predicted <- glmnet:::predict(fit, X, s = cv.opt, type = type)
 
     list(test=as.vector(test), predicted=as.vector(predicted))
 }
