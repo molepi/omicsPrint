@@ -16,8 +16,8 @@
     ##ms <- cvrisk(fit, folds = cv10f, papply = lapply) ##bplapply    
     ms <- AIC(fit)
     
-    test <- mboost:::predict(fit[mstop(ms)], data.frame(y=ytest, x=Xtest), type = type)                    
-    predicted <- mboost:::predict(fit[mstop(ms)], data.frame(y=y, x=X), type = type)
+    test <- predict(fit[mstop(ms)], data.frame(y=ytest, x=Xtest), type = type)                    
+    predicted <- predict(fit[mstop(ms)], data.frame(y=y, x=X), type = type)
 
     list(test=as.vector(test), predicted=as.vector(predicted))
 }
@@ -31,8 +31,8 @@
     ytest <- y[testid]
 
     fit <- cv.glmnet(Xtrain, ytrain, alpha = alpha, family = family)
-    test <- glmnet:::predict(fit, Xtest, s = cv.opt, type = type)
-    predicted <- glmnet:::predict(fit, X, s = cv.opt, type = type)
+    test <- predict(fit, Xtest, s = cv.opt, type = type)
+    predicted <- predict(fit, X, s = cv.opt, type = type)
 
     list(test=as.vector(test), predicted=as.vector(predicted))
 }
@@ -47,11 +47,11 @@
 
     fit <- gbm(y~., data=data.frame(y=ytrain, x=Xtrain), distribution = family, n.trees=n.trees, interaction.depth=interaction.depth, cv.folds=cv.folds, shrinkage=shrinkage, n.cores=1)
 
-    test <- gbm:::predict(fit, data.frame(y=ytest, x=Xtest), type = "response", n.trees = n.trees)
+    test <- predict(fit, data.frame(y=ytest, x=Xtest), type = "response", n.trees = n.trees)
     if(type == "class")
         test <- apply(test, 1, function(x) colnames(test)[which.max(x)])
 
-    predicted <- gbm:::predict(fit, data.frame(y=y, x=X), type = "response", n.trees=n.trees)
+    predicted <- predict(fit, data.frame(y=y, x=X), type = "response", n.trees=n.trees)
     if(type == "class")
         predicted <- apply(predicted, 1, function(x) colnames(predicted)[which.max(x)])
 
@@ -69,14 +69,14 @@
     if(type != "class") {
         fit <- plsr(y~., ncomp=min(ncol(X), ncomp), data=data.frame(y=ytrain, x=Xtrain), validation="CV")
         ncomp.onesigma <- selectNcomp(fit, method = cv.opt, plot = FALSE)
-        test <- pls:::predict.mvr(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=ytest, x=Xtest), type = type)
-        predicted <- pls:::predict.mvr(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=y, x=X), type=type)
+        test <- predict(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=ytest, x=Xtest), type = type)
+        predicted <- predict(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=y, x=X), type=type)
     }
     else {
         fit <- cppls(y~., ncomp=min(ncol(X), ncomp), data=data.frame(y=model.matrix(ytrain), x=Xtrain), validation="CV")
         ncomp.onesigma <- selectNcomp(fit, method = cv.opt, plot = FALSE)
-        test <- pls:::predict.mvr(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=model.matrix(ytest), x=Xtest), type = "score")
-        predicted <- pls:::predict.mvr(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=model.matrix(y), x=X), type = "score")
+        test <- predict(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=model.matrix(ytest), x=Xtest), type = "score")
+        predicted <- predict(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=model.matrix(y), x=X), type = "score")
     }
 
     list(test=as.vector(test), predicted=as.vector(predicted))
@@ -143,7 +143,7 @@
 ##' @importFrom pls plsr selectNcomp cppls
 ##' @importFrom gbm gbm
 ##' @importFrom mboost glmboost boost_control mstop Binomial Gaussian Multinomial
-##' @importFrom stats cor median model.matrix AIC
+##' @importFrom stats cor median model.matrix AIC predict
 ##' @return list containing predictions, validation results, train and test set identifiers and selected top features
 ##' @author mvaniterson
 ##' @export
