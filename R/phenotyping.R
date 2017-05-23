@@ -31,8 +31,8 @@
     ytest <- y[testid]
 
     fit <- cv.glmnet(Xtrain, ytrain, alpha = alpha, family = family)
-    test <- glmnet:::predict(fit, Xtest, s = cv.opt, type = type)
-    predicted <- glmnet:::predict(fit, X, s = cv.opt, type = type)
+    test <- glmnet:::predict.glmnet(fit, Xtest, s = cv.opt, type = type)
+    predicted <- glmnet:::predict.glmnet(fit, X, s = cv.opt, type = type)
 
     list(test=as.vector(test), predicted=as.vector(predicted))
 }
@@ -69,14 +69,14 @@
     if(type != "class") {
         fit <- plsr(y~., ncomp=min(ncol(X), ncomp), data=data.frame(y=ytrain, x=Xtrain), validation="CV")
         ncomp.onesigma <- selectNcomp(fit, method = cv.opt, plot = FALSE)
-        test <- pls:::predict(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=ytest, x=Xtest), type = type)
-        predicted <- pls:::predict(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=y, x=X), type=type)
+        test <- pls:::predict.mvr(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=ytest, x=Xtest), type = type)
+        predicted <- pls:::predict.mvr(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=y, x=X), type=type)
     }
     else {
         fit <- cppls(y~., ncomp=min(ncol(X), ncomp), data=data.frame(y=model.matrix(ytrain), x=Xtrain), validation="CV")
         ncomp.onesigma <- selectNcomp(fit, method = cv.opt, plot = FALSE)
-        test <- pls:::predict(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=model.matrix(ytest), x=Xtest), type = "score")
-        predicted <- pls:::predict(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=model.matrix(y), x=X), type = "score")
+        test <- pls:::predict.mvr(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=model.matrix(ytest), x=Xtest), type = "score")
+        predicted <- pls:::predict.mvr(fit, ncomp = ncomp.onesigma, newdata = data.frame(y=model.matrix(y), x=X), type = "score")
     }
 
     list(test=as.vector(test), predicted=as.vector(predicted))
