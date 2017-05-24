@@ -146,11 +146,10 @@ alleleSharing <- function(x, y=NULL, rHash, phasing=FALSE, verbose=TRUE) {
             x <- .phasing(x, y, rHash)
         message("Using ", nrow(x), " polymophic SNPs to determine allele sharing.")
         data <- .rectangular(x, y, verbose)
+        if(!(any(colnames(x) %in% data$colnames.x) & any(colnames(y) %in% data$colnames.y)))
+            stop("rHash and x or y do not match: probably swap 'x' and 'y'!")
     }
 
-    if(!(any(colnames(x) %in% data$colnames.x) & any(colnames(y) %in% data$colnames.y)))
-        stop("rHash and x or y do not match: probably swap 'x' and 'y'!")
-    
     pairs <- paste(data$colnames.x, data$colnames.y, sep=":")
     mId <- pairs %in% ls(rHash)
     data$relation <- "unrelated"
@@ -176,7 +175,7 @@ predict <- function(data, n=100, plot.it=TRUE){
     data <- droplevels(data)
     model <- lda(relation~mean+var, data=data)
 
-    predicted <- predict(model, data)
+    predicted <- MASS:::predict.lda(model, data)
 
     data$predicted <- predicted$class
 
@@ -189,7 +188,7 @@ predict <- function(data, n=100, plot.it=TRUE){
     xp <- seq(min(data$mean), max(data$mean), length = n)
     yp <- seq(min(data$var), max(data$var), length = n)
     grid <- expand.grid(mean = xp, var = yp)
-    predicted <- predict(model, grid)
+    predicted <- MASS:::predict.lda(model, grid)
     posterior <- predicted$posterior
     if(ncol(posterior) > 2) {
         for(k in 1:ncol(posterior)) {
