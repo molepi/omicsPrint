@@ -170,12 +170,12 @@ alleleSharing <- function(x, y=NULL, rHash, phasing=FALSE, verbose=TRUE) {
 ##' @importFrom graphics contour legend plot points
 ##' @importFrom MASS lda
 ##' @export
-predict <- function(data, n=100, plot.it=TRUE){
+inferRelation <- function(data, n=100, plot.it=TRUE){
 
     data <- droplevels(data)
     model <- lda(relation~mean+var, data=data)
 
-    predicted <- MASS:::predict.lda(model, data)
+    predicted <- predict(model, data)
 
     data$predicted <- predicted$class
 
@@ -188,7 +188,7 @@ predict <- function(data, n=100, plot.it=TRUE){
     xp <- seq(min(data$mean), max(data$mean), length = n)
     yp <- seq(min(data$var), max(data$var), length = n)
     grid <- expand.grid(mean = xp, var = yp)
-    predicted <- MASS:::predict.lda(model, grid)
+    predicted <- predict(model, grid)
     posterior <- predicted$posterior
     if(ncol(posterior) > 2) {
         for(k in 1:ncol(posterior)) {
