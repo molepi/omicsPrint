@@ -170,7 +170,7 @@ alleleSharing <- function(x, y=NULL, rHash, phasing=FALSE, verbose=TRUE) {
 ##' @importFrom graphics contour legend plot points
 ##' @importFrom MASS lda
 ##' @export
-inferRelation <- function(data, n=100, plot.it=TRUE){
+inferRelations <- function(data, n=100, plot.it=TRUE){
 
     data <- droplevels(data)
     model <- lda(relation~mean+var, data=data)

@@ -84,7 +84,6 @@ head(data)
 predict(data)
 ```
 
-
 ## SessionInfo
 
 ```{r}
