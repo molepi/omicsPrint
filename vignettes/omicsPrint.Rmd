@@ -11,6 +11,20 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE, eval=TRUE, cache.lazy = FALSE)
+
+rm(list=ls()) ##clear work space
+
+suppressPackageStartupMessages({ ##to get rid of annoying startup messages (like ours ;)!)
+    library(BBMRIomics) #from gitlab   
+    library(DNAmArray) #from github
+    library(omicsPrint) #from github
+      
+    library(BiocParallel) ##from bioc   
+})
+```
+
 This vignette shows how `omicsPrint` can be used to verify sample
 relationships using 450k DNA methylation data[@Bibikova2011]. In order
 to run the verification access to the raw idat-files is required as
@@ -36,13 +50,7 @@ The following steps are involved:
 
 This part is specific to each data sets.
 
-```{r, prepare, echo=FALSE, cache=TRUE}
-suppressPackageStartupMessages({
-require(BBMRIomics)
-require(omicsPrint)
-require(DNAmArray)
-require(BiocParallel)  
-})
+```{r, prepare, echo=FALSE}
 ##create targets file for LLS
 samplesheets <- getView("methylationSamplesheet", usrpwd=RP3_MDB_USRPWD, url=RP3_MDB, verbose=FALSE)
 path450k <- file.path(VM_BASE_DATA, "IlluminaHumanMethylation450k")
@@ -74,14 +82,14 @@ relations <- rbind(bRels, tRels)
 In the end you should have a `data.frame` called targets and relations
 like these:
 
-```{r, targets, cache=TRUE}
+```{r, targets}
 head(targets)
 ```
 
 Occasionally, it is recommended to relabel some relations, for example
 using 'gsub':
 
-```{r, relations, cache=TRUE}
+```{r, relations}
 head(relations)
 table(relations$relation_type)
 relations$relation_type <- gsub("2nd degree family", "unrelated", relations$relation_type)
@@ -101,7 +109,7 @@ Zhou *et al.* using information from the dutch population
 [GoNL](http://www.nlgenome.nl/). 
 
 
-```{r, betas, cache=TRUE} 
+```{r, betas} 
 library(DNAmArray)
 data(hg19.GoNLsnps)
 cpgs <- unique(hg19.GoNLsnps$probe)
@@ -129,7 +137,7 @@ in the
 we have added some additional steps to ensure the cluster detected
 have a good separation and contain sufficient number of samples.
 
-```{r, betas2genotypes, cache=TRUE}
+```{r, betas2genotypes}
 xCalls <- beta2genotype(betas)
 xCalls[1:5, 1:5]
 ```
@@ -138,7 +146,7 @@ To get an idea of how the K-means clustering algorithm works a plot of
 the raw beta-values of a CpG affected by a SNP can be generated like
 this:
 
-```{r, clusters, cache=TRUE}
+```{r, clusters}
 hist(betas[rownames(betas) == rownames(xCalls)[1],], n=100, xlab="beta-values", main="CpG affect by a SNP")
 rug(betas[rownames(betas) == rownames(xCalls)[1],])
 ```
@@ -148,7 +156,7 @@ rug(betas[rownames(betas) == rownames(xCalls)[1],])
 We use Identity by State (IBS) for a set of SNPs to infer sample
 relations[@Abecasis2001].
 
-```{r, allelesharing, cache=TRUE}
+```{r, allelesharing}
 data <- alleleSharing(x=xCalls, y=NULL, relations=relations, idx.col="idx.x", idy.col="idx.y", verbose=TRUE)
 head(data)
 ```
@@ -166,13 +174,13 @@ analysis and generates a confusion-matrix, graphically representation
 of the classification boundary and outputs the missclassified sample
 pairs.
 
-```{r, inferrelations, cache=TRUE}
+```{r, inferrelations}
 mismatches <- inferRelations(data)
 ```
 
 # SessionInfo #
 
-```{r}
+```{r, sessioninfo}
 sessionInfo()
 ```
 
