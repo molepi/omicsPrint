@@ -1,5 +1,5 @@
 ---
-title: "omicsPrint"
+title: "Sample relationship verification using 450k DNA Methylation data"
 author: "Maarten van Iterson"
 date: "`r Sys.Date()`"
 output:
@@ -11,10 +11,26 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+This vignette shows how `omicsPrint` can be used to verify sample
+relationships using 450k DNA methylation data[@Bibikova2011]. In order
+to run the verification access to the raw idat-files is required as
+well as an overview of the reported sample relations. It is important
+to note that all the array should pass quality control, e.g. using
+[MethylAid](http://bioconductor.org/packages/MethylAid/), since
+bad-quality array could introduce spurious sample relations.
 
-## Introduction
+The following steps are involved:
 
-## Verify sample relations: 450K data
+1. Construct a targets-file containing path to the raw idat-files
+2. Construct `data.frame` containing reported relations
+3. Extract informative SNPs from 450k DNA methylation data
+4. Convert beta-values to genotypes
+5. Perform the sample matching across all pairs
+6. Report mismatches and provide graphical summary
+
+## Construct targets and relations ##
+
+This part is specific to each data sets.
 
 ```{r, prepare, echo=FALSE, cache=TRUE}
 suppressPackageStartupMessages({
@@ -34,7 +50,7 @@ runs <- getView("getMethylationRuns", usrpwd=RP3_MDB_USRPWD, url=RP3_MDB, verbos
 runs <- runs[runs$qc == "passed",]    
 targets <- samplesheets[samplesheets$run_id %in% runs$run_id, ]
 targets <- targets[targets$biobank_id == "LLS",]
-##create data.fraem with realtions
+##create data.frame with relations
 relations <- getView("getRelations", usrpwd=RP3_MDB_USRPWD, url=RP3_MDB, verbose=FALSE)
 relations <- subset(relations, !is.na(relation_type))
 relx <- getView("getMethylationRuns", usrpwd=RP3_MDB_USRPWD, url=RP3_MDB, verbose=FALSE)
@@ -48,40 +64,63 @@ bRels <- merge(relations, relx[, c("ids", "idx")], by.x="relation_id", by.y="ids
 ##obtain technical relations
 tRels <- merge(relx, relx, by="ids")[, c("idx.x", "idx.y")]
 tRels$relation_type <- "identical"
-relations <- rbind(bRels, tRels)
-    
+relations <- rbind(bRels, tRels)    
 ```
+
+In the end you should have a `data.frame` called targets and relations
+like these:
 
 ```{r, targets, cache=TRUE}
 head(targets)
+head(relations)
 ```
 
-```{r, betas, cache=TRUE}
+## Extract informative SNPs from 450k DNA methylation data ##
+
+The 65 SNPs available on the array are not enough to perform sample
+verification with high confidence. Fortunately, several probes on the
+array contain SNPs occuring frequently in different
+populations[@chen2013, @Zhou2016]. We have extended the results of
+Zhou *et al.* using information from the dutch population
+[GoNL](http://www.nlgenome.nl/).
+
+
+```{r, betas, cache=TRUE} 
 library(DNAmArray)
 data(hg19.GoNLsnps)
 cpgs <- unique(hg19.GoNLsnps$probe)
 library(BiocParallel)
 register(MulticoreParam(2))
-RGset <- read.metharray.exp.par(targets[1:20,], verbose=FALSE)
+RGset <- read.metharray.exp.par(targets, verbose=FALSE)
 betas <- getBeta(RGset)
 betas <- rbind(betas[rownames(betas) %in% cpgs,], getSnpBeta(RGset))
 dim(betas)
 ```
 
+Here, we extract all Illumina probe identifiers that have a GoNL SNP
+in there probe-sequence (see for more detail ?hg19.GoNLsnps) and the
+65 SNPs provided by Illumina. Furthermore, we have used the
+[DNAmArray](https://github.com/molepi/DNAmArray)
+`read.metharray.exp.par`-function to read in all idat files in
+parallel. However, for this example we just use the first 50 arrays.
+
+## Convert beta-values to genotypes ##
+
+Now we can convert the beta-values to genotypes (0, 1, 2). We have
+implemented a K-means clustering approach similar to the one proposed
+in the
+[wateRmelon](http://bioconductor.org/packages/wateRmelon/)-package. However,
+we have added some additional steps to ensure the cluster detected
+have a good separation and contain sufficient number of samples.
+
 ```{r, betas2genotypes, cache=TRUE}
 xCalls <- beta2genotype(betas)
 ```
 
-
-```{r, relations, cache=TRUE}
-head(relations)
-rHash <- hashRelations(relations, idx.col="idx.x", idy.col="idx.y")
-```
-
 ```{r, allelesharing, cache=TRUE}
-data <- alleleSharing(x=xCalls, y=NULL, rHash=rHash, verbose=TRUE)
+data <- alleleSharing(x=xCalls, y=NULL, relations=relations, verbose=TRUE)
 head(data)
-predict(data)
+inferRelations(data)
 ```
 
 ## SessionInfo

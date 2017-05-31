@@ -115,6 +115,29 @@
     ## return(x)
 }
 
+.hashRelations <- function(relations, idx.col="idx", idy.col="idy", rel.col="relation_type"){
+    hash <- new.env()
+    keys <- paste(relations[, idx.col], relations[, idy.col], sep=":")
+    values <- relations[, rel.col]
+
+    ##are there inconsistent relations
+    if(any(tapply(values, keys, function(x) length(unique(x)) > 1)))
+        stop("Nonconsistent relations!")
+
+    ##redundant relations are automatically remove!
+    tmp <- mapply(assign, keys, values, MoreArgs=list(envir = hash))
+    hash
+}
+
+.constructRelations <- function(xnames, ynames, idx.col, idy.col, rel.col) {
+    if(!is.null(ynames))
+        relations <- expand.grid(idx=xnames, idy=ynames)
+    else
+        relations <- expand.grid(idx=xnames, idy=xnames)
+    relations[,rel.col] <- "unrelated"
+    relations[relations[,idx.col] == relations[,idy.col], rel.col] <- "identical"
+    relations[relations[,rel.col] != "unrelated",]
+}
 
 ##' allele sharing based on ibs
 ##'
@@ -123,7 +146,10 @@
 ##' @title allele sharing based on ibs
 ##' @param x genotype vector or matrix
 ##' @param y genotype vector or matrix
-##' @param rHash envirnoment containing sample relationships
+##' @param relations data.frame with relations and their mapping identifiers
+##' @param idx.col columname conaining mapping identifiers
+##' @param idy.col columname conaining mapping identifiers
+##' @param rel.col columname containing the relations
 ##' @param phasing FALSE
 ##' @param verbose show progress
 ##' @return data.frame with mean and variance ibs between all pairs
@@ -131,10 +157,18 @@
 ##' @importFrom matrixStats colVars
 ##' @importFrom stats cov
 ##' @export
-alleleSharing <- function(x, y=NULL, rHash, phasing=FALSE, verbose=TRUE) {
+alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx", idy.col="idy", rel.col="relation_type", phasing=FALSE, verbose=TRUE) {
+
+    if(is.null(relations))
+        relations <- .constructRelations(xnames=colnames(x), ynames=colnames(y), idx.col=idx.col, idy.col=idy.col, rel.col=rel.col)
+    
+    if(verbose)
+        message("Hash relations")
+    rHash <- .hashRelations(relations, idx.col=idx.col, idy.col=idy.col, rel.col=rel.col)
 
     if(is.null(y)) {
-        message("Using ", nrow(x), " polymophic SNPs to determine allele sharing.")
+        if(verbose)
+            message("Using ", nrow(x), " polymophic SNPs to determine allele sharing.")
         data <- .square(x, x, verbose)
     } else {
         rows <- intersect(rownames(x), rownames(y))
@@ -144,9 +178,10 @@ alleleSharing <- function(x, y=NULL, rHash, phasing=FALSE, verbose=TRUE) {
         y <- y[rId,]
         if(phasing)
             x <- .phasing(x, y, rHash)
-        message("Using ", nrow(x), " polymophic SNPs to determine allele sharing.")
+        if(verbose)
+            message("Using ", nrow(x), " polymophic SNPs to determine allele sharing.")
         data <- .rectangular(x, y, verbose)
-        if(!(any(colnames(x) %in% data$colnames.x) & any(colnames(y) %in% data$colnames.y)))
+        if(!(any(colnames(x) %in% data$colnames.x) & any(colnames(y) %in% data$colnames.y)))            
             stop("rHash and x or y do not match: probably swap 'x' and 'y'!")
     }
 
@@ -204,31 +239,6 @@ inferRelations <- function(data, n=100, plot.it=TRUE){
     legend("topright", paste("assumed", levels(data$relation)), col=1:nlevels(data$relation), pch=15, bty="n")
 
     invisible(data[id,])
-}
-
-##' construct hash table with relations
-##'
-##' constructs hash table with relations for efficient lookup
-##' @title construct hash table with relations
-##' @param relations data.frame with relations and their mapping identifiers
-##' @param idx.col columname conaining mapping identifiers
-##' @param idy.col columname conaining mapping identifiers
-##' @param rel.col columname containing the relations
-##' @return envirnoment
-##' @author mvaniterson
-##' @export
-hashRelations <- function(relations, idx.col="id.x", idy.col="id.y", rel.col="relation_type"){
-    hash <- new.env()
-    keys <- paste(relations[, idx.col], relations[, idy.col], sep=":")
-    values <- relations[, rel.col]
-
-    ##are there inconsistent relations
-    if(any(tapply(values, keys, function(x) length(unique(x)) > 1)))
-        stop("Nonconsistent relations!")
-
-    ##redundant relations are automatically remove!
-    tmp <- mapply(assign, keys, values, MoreArgs=list(envir = hash))
-    hash
 }
 
 ##' convert betas to genotypes

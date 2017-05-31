@@ -2,7 +2,6 @@
 
 export(alleleSharing)
 export(beta2genotype)
-export(hashRelations)
 export(inferRelations)
 export(phenotyping)
 importFrom(MASS,lda)

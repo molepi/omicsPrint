@@ -4,14 +4,22 @@
 \alias{alleleSharing}
 \title{allele sharing based on ibs}
 \usage{
-alleleSharing(x, y = NULL, rHash, phasing = FALSE, verbose = TRUE)
+alleleSharing(x, y = NULL, relations = NULL, idx.col = "idx",
+  idy.col = "idy", rel.col = "relation_type", phasing = FALSE,
+  verbose = TRUE)
 }
 \arguments{
 \item{x}{genotype vector or matrix}
 
 \item{y}{genotype vector or matrix}
 
-\item{rHash}{envirnoment containing sample relationships}
+\item{relations}{data.frame with relations and their mapping identifiers}
+
+\item{idx.col}{columname conaining mapping identifiers}
+
+\item{idy.col}{columname conaining mapping identifiers}
+
+\item{rel.col}{columname containing the relations}
 
 \item{phasing}{FALSE}
 

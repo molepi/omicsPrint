@@ -1,6 +1,6 @@
 Package: omicsPrint
 Title: Cross omic genetic fingerprinting and phenotyping
-Version: 0.0.0.12
+Version: 0.0.0.13
 Authors@R: person("Maarten", "van Iterson", email ="m.van_iterson@lumc.nl", role = c("aut", "cre"))
 Description: omicsPrint provides functionality for cross omic genetic fingerprinting, for example, to verify sample relationships. The package also provides functionality for cross omic phenotyping.
 Depends: R (>= 3.3.0), gbm, pls, glmnet, mboost, MASS
