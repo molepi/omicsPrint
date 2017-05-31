@@ -17,7 +17,11 @@ to run the verification access to the raw idat-files is required as
 well as an overview of the reported sample relations. It is important
 to note that all the array should pass quality control, e.g. using
 [MethylAid](http://bioconductor.org/packages/MethylAid/), since
-bad-quality array could introduce spurious sample relations.
+bad-quality array could introduce spurious sample relations. 
+
+> If only beta-values are available for the signal probes,
+> i.e. missing the rs-probes, probes containing SNPs should be
+> extracted and if informative enough these could be used!
 
 The following steps are involved:
 
@@ -72,7 +76,19 @@ like these:
 
 ```{r, targets, cache=TRUE}
 head(targets)
+```
+
+Occasionally, it is recommended to relabel some relations, for example
+using 'gsub':
+
+```{r, relations, cache=TRUE}
 head(relations)
+table(relations$relation_type)
+relations$relation_type <- gsub("2nd degree family", "unrelated", relations$relation_type)
+relations$relation_type <- gsub("has repeated measurements|has monozygotic twin", "unrelated", relations$relation_type)
+relations$relation_type <- gsub("inferred 1st degree family|has parent|has child", "parentoffspring", relations$relation_type)
+relations$relation_type <- gsub("has dizygotic twin|has sib", "sibship", relations$relation_type)
+table(relations$relation_type)
 ```
 
 ## Extract informative SNPs from 450k DNA methylation data ##
@@ -82,7 +98,7 @@ verification with high confidence. Fortunately, several probes on the
 array contain SNPs occuring frequently in different
 populations[@chen2013, @Zhou2016]. We have extended the results of
 Zhou *et al.* using information from the dutch population
-[GoNL](http://www.nlgenome.nl/).
+[GoNL](http://www.nlgenome.nl/). 
 
 
 ```{r, betas, cache=TRUE} 
@@ -90,7 +106,7 @@ library(DNAmArray)
 data(hg19.GoNLsnps)
 cpgs <- unique(hg19.GoNLsnps$probe)
 library(BiocParallel)
-register(MulticoreParam(2))
+register(MulticoreParam(10))
 RGset <- read.metharray.exp.par(targets, verbose=FALSE)
 betas <- getBeta(RGset)
 betas <- rbind(betas[rownames(betas) %in% cpgs,], getSnpBeta(RGset))
@@ -102,11 +118,11 @@ in there probe-sequence (see for more detail ?hg19.GoNLsnps) and the
 65 SNPs provided by Illumina. Furthermore, we have used the
 [DNAmArray](https://github.com/molepi/DNAmArray)
 `read.metharray.exp.par`-function to read in all idat files in
-parallel. However, for this example we just use the first 50 arrays.
+parallel. 
 
 ## Convert beta-values to genotypes ##
 
-Now we can convert the beta-values to genotypes (0, 1, 2). We have
+Now we can convert the beta-values to genotypes (1, 2, 3). We have
 implemented a K-means clustering approach similar to the one proposed
 in the
 [wateRmelon](http://bioconductor.org/packages/wateRmelon/)-package. However,
@@ -115,16 +131,49 @@ have a good separation and contain sufficient number of samples.
 
 ```{r, betas2genotypes, cache=TRUE}
 xCalls <- beta2genotype(betas)
+xCalls[1:5, 1:5]
 ```
+
+To get an idea of how the K-means clustering algorithm works a plot of
+the raw beta-values of a CpG affected by a SNP can be generated like
+this:
+
+```{r, clusters, cache=TRUE}
+hist(betas[rownames(betas) == rownames(xCalls)[1],], n=100, xlab="beta-values", main="CpG affect by a SNP")
+rug(betas[rownames(betas) == rownames(xCalls)[1],])
+```
+
+## Perform the sample matching across all pairs ##
+
+We use Identity by State (IBS) for a set of SNPs to infer sample
+relations[@Abecasis2001].
 
 ```{r, allelesharing, cache=TRUE}
-data <- alleleSharing(x=xCalls, y=NULL, relations=relations, verbose=TRUE)
+data <- alleleSharing(x=xCalls, y=NULL, relations=relations, idx.col="idx.x", idy.col="idx.y", verbose=TRUE)
 head(data)
-inferRelations(data)
 ```
 
-## SessionInfo
+The output is a `data.frame` containing all pairwise comparisons with
+the mean and variance of the IBS over the set of SNPs and the reported
+and predicted sample relationship, including the identifiers.
+
+## Report mismatches and provide graphical summary ##
+
+Since, we provided a list of known relations, assuming the majority is
+correct, we can build a classifier to discover missclassified
+relations. The current implementation uses linear discriminant
+analysis and generates a confusion-matrix, graphically representation
+of the classification boundary and outputs the missclassified sample
+pairs.
+
+```{r, inferrelations, cache=TRUE}
+mismatches <- inferRelations(data)
+```
+
+# SessionInfo #
 
 ```{r}
 sessionInfo()
 ```
+
+# Reference # 
