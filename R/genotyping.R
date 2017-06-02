@@ -146,7 +146,7 @@
     calledSNPs <- apply(x, 1, function(x) sum(!is.na(x))/length(x))
 
     if(verbose)
-        message("There are ", sum(calledSNPs <= callRate), " dropped because of low call rate!")
+        message("There are ", sum(calledSNPs <= callRate), " SNPs dropped because of low call rate!")
 
     x <- x[calledSNPs > callRate,]
 
@@ -239,6 +239,12 @@ alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx", idy.col="idy
 inferRelations <- function(data, n=100, plot.it=TRUE){
 
     data <- droplevels(data)
+
+    dropped <- data[is.na(data$mean),]
+    dropped$predicted <- "dropped"
+    
+    data <- data[!is.na(data$mean),]
+    
     model <- lda(relation~mean+var, data=data)
 
     predicted <- MASS:::predict.lda(model, data)
@@ -269,7 +275,7 @@ inferRelations <- function(data, n=100, plot.it=TRUE){
     points(data[id, c("mean", "var")], pch=".", cex=3, col=as.integer(data$relation[id]))
     legend("topright", paste("assumed", levels(data$relation)), col=1:nlevels(data$relation), pch=15, bty="n")
 
-    invisible(data[id,])
+    invisible(rbind(data[id,], dropped))
 }
 
 ##' convert betas to genotypes
