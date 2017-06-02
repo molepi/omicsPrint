@@ -150,11 +150,11 @@
 
     x <- x[calledSNPs > callRate,]
 
-    ##if the coverage of called SNPs is less then coverageRate do not calculate IBS
-    coverage <- apply(x, 2, function(x) sum(is.na(x))/length(x))
+    ##if the coverage of called SNPs is not larger then coverageRate do not calculate IBS
+    coverage <- apply(x, 2, function(x) sum(!is.na(x))/length(x))
 
     if(verbose)
-        message("There are ", sum(coverage >= coverageRate), " samples set to NA because to little SNPs called!")
+        message("There are ", sum(coverage < coverageRate), " samples set to NA because to little SNPs called!")
 
     x[, coverage < coverageRate] <- NA
     x
