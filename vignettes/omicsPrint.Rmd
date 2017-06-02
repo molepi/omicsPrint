@@ -9,6 +9,7 @@ vignette: >
   %\VignetteIndexEntry{omicsPrint}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+bibliography: omicsPrint.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -104,7 +105,7 @@ table(relations$relation_type)
 The 65 SNPs available on the array are not enough to perform sample
 verification with high confidence. Fortunately, several probes on the
 array contain SNPs occuring frequently in different
-populations[@chen2013, @Zhou2016]. We have extended the results of
+populations[@Chen2013; @Zhou2016]. We have extended the results of
 Zhou *et al.* using information from the dutch population
 [GoNL](http://www.nlgenome.nl/). 
 
@@ -176,6 +177,20 @@ pairs.
 
 ```{r, inferrelations}
 mismatches <- inferRelations(data)
+```
+
+Example using `gaphunter` from minfi:
+
+```{r, gaphunter}
+library(minfi)
+gh <- gaphunter(betas)
+xCalls <- gh$sampleresults
+colnames(xCalls) <- colnames(betas)
+maf <- apply(xCalls, 1, function(x) min(table(x)/length(x)))
+xCalls <- xCalls[maf > 0.05,]
+data <- alleleSharing(x=xCalls, y=NULL, relations=relations, idx.col="idx.x", idy.col="idx.y", verbose=TRUE)
+mismatches <- inferRelations(data)
+mismatches
 ```
 
 # SessionInfo #

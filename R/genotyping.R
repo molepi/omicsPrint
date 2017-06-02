@@ -5,6 +5,9 @@
     if((nrow(x) != nrow(y)))
         stop("Dimension mismatch!")
 
+    if(is.null(colnames(x)) | is.null(colnames(y)))
+        stop("Colnames should be provided!")
+
     na.rm <- sum(is.na(x)) > 0 | sum(is.na(y)) > 0
 
     ##calculates mean and variance of IBS between all pairs of x and y
@@ -36,6 +39,9 @@
 
     if((ncol(x) != ncol(y)) | (nrow(x) != nrow(y)))
         stop("Dimension mismatch!")
+
+    if(is.null(colnames(x)) | is.null(colnames(y)))
+        stop("Colnames should be provided!")
 
     na.rm <- sum(is.na(x)) > 0 | sum(is.na(y)) > 0
 
@@ -156,7 +162,7 @@
     if(verbose)
         message("There are ", sum(coverage < coverageRate), " samples set to NA because too little SNPs called!")
 
-    x[, coverage >= coverageRate] ##drop those    
+    x[, coverage >= coverageRate] ##drop those
 }
 
 ##' allele sharing based on ibs
