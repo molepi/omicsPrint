@@ -144,18 +144,18 @@
 
     ##drop SNPs difficult to call
     calledSNPs <- apply(x, 1, function(x) sum(!is.na(x))/length(x))
-    
+
     if(verbose)
-        message("There are ", sum(calledSNPs > callRate), " dropped because of low call rate!")
-    
+        message("There are ", sum(calledSNPs <= callRate), " dropped because of low call rate!")
+
     x <- x[calledSNPs > callRate,]
 
     ##if the coverage of called SNPs is less then coverageRate do not calculate IBS
     coverage <- apply(x, 2, function(x) sum(is.na(x))/length(x))
-    
+
     if(verbose)
-        message("There are ", sum(coverage < coverageRate), " samples set to NA because to little SNPs called!")
-    
+        message("There are ", sum(coverage >= coverageRate), " samples set to NA because to little SNPs called!")
+
     x[, coverage < coverageRate] <- NA
     x
 }
@@ -190,17 +190,18 @@ alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx", idy.col="idy
     rHash <- .hashRelations(relations, idx.col=idx.col, idy.col=idy.col, rel.col=rel.col)
 
     if(is.null(y)) {
+
+        x <- .pruning(x, callRate=callRate, coverageRate=coverageRate, verbose=verbose)
+        
         if(verbose)
             message("Using ", nrow(x), " polymophic SNPs to determine allele sharing.")
-        
-        x <- .pruning(x, callRate=callRate, coverageRate=coverageRate, verbose=verbose)
-        
+
         data <- .square(x, x, verbose)
     } else {
-        
+
         x <- .pruning(x, callRate=callRate, coverageRate=coverageRate, verbose=verbose)
         y <- .pruning(y, callRate=callRate, coverageRate=coverageRate, verbose=verbose)
-        
+
         rows <- intersect(rownames(x), rownames(y))
         rId <- match(rows, rownames(x))
         x <- x[rId,]
