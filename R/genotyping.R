@@ -139,6 +139,27 @@
     relations[relations[,rel.col] != "unrelated",]
 }
 
+
+.pruning <- function(x, callRate, coverageRate, verbose) {
+
+    ##drop SNPs difficult to call
+    calledSNPs <- apply(x, 1, function(x) sum(!is.na(x))/length(x))
+    
+    if(verbose)
+        message("There are ", sum(calledSNPs > callRate), " dropped because of low call rate!")
+    
+    x <- x[calledSNPs > callRate,]
+
+    ##if the coverage of called SNPs is less then coverageRate do not calculate IBS
+    coverage <- apply(x, 2, function(x) sum(is.na(x))/length(x))
+    
+    if(verbose)
+        message("There are ", sum(coverage < coverageRate), " samples set to NA because to little SNPs called!")
+    
+    x[, coverage < coverageRate] <- NA
+    x
+}
+
 ##' allele sharing based on ibs
 ##'
 ##' calculate mean variance between to vectors/matrices genotypes
@@ -150,6 +171,8 @@
 ##' @param idx.col columname conaining mapping identifiers
 ##' @param idy.col columname conaining mapping identifiers
 ##' @param rel.col columname containing the relations
+##' @param callRate default 0.95 SNPs that are called in less then the threshold are dropped
+##' @param coverageRate default 2/3 samples with less then threshold SNPs called are set to NA
 ##' @param phasing FALSE
 ##' @param verbose show progress
 ##' @return data.frame with mean and variance ibs between all pairs
@@ -157,11 +180,11 @@
 ##' @importFrom matrixStats colVars
 ##' @importFrom stats cov
 ##' @export
-alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx", idy.col="idy", rel.col="relation_type", phasing=FALSE, verbose=TRUE) {
+alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx", idy.col="idy", rel.col="relation_type", callRate=0.95, coverageRate=2/3, phasing=FALSE, verbose=TRUE) {
 
     if(is.null(relations))
         relations <- .constructRelations(xnames=colnames(x), ynames=colnames(y), idx.col=idx.col, idy.col=idy.col, rel.col=rel.col)
-    
+
     if(verbose)
         message("Hash relations")
     rHash <- .hashRelations(relations, idx.col=idx.col, idy.col=idy.col, rel.col=rel.col)
@@ -169,8 +192,15 @@ alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx", idy.col="idy
     if(is.null(y)) {
         if(verbose)
             message("Using ", nrow(x), " polymophic SNPs to determine allele sharing.")
+        
+        x <- .pruning(x, callRate=callRate, coverageRate=coverageRate, verbose=verbose)
+        
         data <- .square(x, x, verbose)
     } else {
+        
+        x <- .pruning(x, callRate=callRate, coverageRate=coverageRate, verbose=verbose)
+        y <- .pruning(y, callRate=callRate, coverageRate=coverageRate, verbose=verbose)
+        
         rows <- intersect(rownames(x), rownames(y))
         rId <- match(rows, rownames(x))
         x <- x[rId,]
@@ -181,7 +211,7 @@ alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx", idy.col="idy
         if(verbose)
             message("Using ", nrow(x), " polymophic SNPs to determine allele sharing.")
         data <- .rectangular(x, y, verbose)
-        if(!(any(colnames(x) %in% data$colnames.x) & any(colnames(y) %in% data$colnames.y)))            
+        if(!(any(colnames(x) %in% data$colnames.x) & any(colnames(y) %in% data$colnames.y)))
             stop("rHash and x or y do not match: probably swap 'x' and 'y'!")
     }
 

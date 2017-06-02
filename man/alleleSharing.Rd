@@ -5,8 +5,8 @@
 \title{allele sharing based on ibs}
 \usage{
 alleleSharing(x, y = NULL, relations = NULL, idx.col = "idx",
-  idy.col = "idy", rel.col = "relation_type", phasing = FALSE,
-  verbose = TRUE)
+  idy.col = "idy", rel.col = "relation_type", callRate = 0.95,
+  coverageRate = 2/3, phasing = FALSE, verbose = TRUE)
 }
 \arguments{
 \item{x}{genotype vector or matrix}
@@ -20,6 +20,10 @@ alleleSharing(x, y = NULL, relations = NULL, idx.col = "idx",
 \item{idy.col}{columname conaining mapping identifiers}
 
 \item{rel.col}{columname containing the relations}
+
+\item{callRate}{default 0.95 SNPs that are called in less then the threshold are dropped}
+
+\item{coverageRate}{default 2/3 samples with less then threshold SNPs called are set to NA}
 
 \item{phasing}{FALSE}
 
