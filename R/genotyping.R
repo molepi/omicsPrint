@@ -154,10 +154,9 @@
     coverage <- apply(x, 2, function(x) sum(!is.na(x))/length(x))
 
     if(verbose)
-        message("There are ", sum(coverage < coverageRate), " samples set to NA because to little SNPs called!")
+        message("There are ", sum(coverage < coverageRate), " samples set to NA because too little SNPs called!")
 
-    x[, coverage < coverageRate] <- NA
-    x
+    x[, coverage >= coverageRate] ##drop those    
 }
 
 ##' allele sharing based on ibs
@@ -192,9 +191,9 @@ alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx", idy.col="idy
     if(is.null(y)) {
 
         x <- .pruning(x, callRate=callRate, coverageRate=coverageRate, verbose=verbose)
-        
+
         if(verbose)
-            message("Using ", nrow(x), " polymophic SNPs to determine allele sharing.")
+            message("Using ", nrow(x), " polymorphic SNPs to determine allele sharing.")
 
         data <- .square(x, x, verbose)
     } else {
@@ -239,12 +238,6 @@ alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx", idy.col="idy
 inferRelations <- function(data, n=100, plot.it=TRUE){
 
     data <- droplevels(data)
-
-    dropped <- data[is.na(data$mean),]
-    dropped$predicted <- "dropped"
-    
-    data <- data[!is.na(data$mean),]
-    
     model <- lda(relation~mean+var, data=data)
 
     predicted <- MASS:::predict.lda(model, data)
@@ -275,7 +268,7 @@ inferRelations <- function(data, n=100, plot.it=TRUE){
     points(data[id, c("mean", "var")], pch=".", cex=3, col=as.integer(data$relation[id]))
     legend("topright", paste("assumed", levels(data$relation)), col=1:nlevels(data$relation), pch=15, bty="n")
 
-    invisible(rbind(data[id,], dropped))
+    invisible(data[id,])
 }
 
 ##' convert betas to genotypes
