@@ -1,4 +1,4 @@
-This vignette shows how `omicsPrint` can be used to verify sample relationships using 450k DNA methylation data\[@Bibikova2011\]. In order to run the verification access to the raw idat-files is required as well as an overview of the reported sample relations. It is important to note that all the array should pass quality control, e.g. using [MethylAid](http://bioconductor.org/packages/MethylAid/), since bad-quality array could introduce spurious sample relations.
+This vignette shows how `omicsPrint` can be used to verify sample relationships using 450k DNA methylation data(Bibikova et al. 2011). In order to run the verification access to the raw idat-files is required as well as an overview of the reported sample relations. It is important to note that all the array should pass quality control, e.g. using [MethylAid](http://bioconductor.org/packages/MethylAid/), since bad-quality array could introduce spurious sample relations.
 
 > If only beta-values are available for the signal probes, i.e. missing the rs-probes, probes containing SNPs should be extracted and if informative enough these could be used!
 
@@ -117,7 +117,7 @@ table(relations$relation_type)
 Extract informative SNPs from 450k DNA methylation data
 -------------------------------------------------------
 
-The 65 SNPs available on the array are not enough to perform sample verification with high confidence. Fortunately, several probes on the array contain SNPs occuring frequently in different populations\[@chen2013, @Zhou2016\]. We have extended the results of Zhou *et al.* using information from the dutch population [GoNL](http://www.nlgenome.nl/).
+The 65 SNPs available on the array are not enough to perform sample verification with high confidence. Fortunately, several probes on the array contain SNPs occuring frequently in different populations(Chen et al. 2013; Zhou, Laird, and Shen 2016). We have extended the results of Zhou *et al.* using information from the dutch population [GoNL](http://www.nlgenome.nl/).
 
 ``` r
 library(DNAmArray)
@@ -177,7 +177,7 @@ rug(betas[rownames(betas) == rownames(xCalls)[1],])
 Perform the sample matching across all pairs
 --------------------------------------------
 
-We use Identity by State (IBS) for a set of SNPs to infer sample relations\[@Abecasis2001\].
+We use Identity by State (IBS) for a set of SNPs to infer sample relations(Abecasis et al. 2001).
 
 ``` r
 data <- alleleSharing(x=xCalls, y=NULL, relations=relations, idx.col="idx.x", idy.col="idx.y", verbose=TRUE)
@@ -238,6 +238,87 @@ mismatches <- inferRelations(data)
     ##    unrelated               .               .       .    332429
 
 ![](omicsPrint_files/figure-markdown_github/inferrelations-1.png)
+
+Example using `gaphunter` from minfi:
+
+``` r
+library(minfi)
+gh <- gaphunter(betas)
+```
+
+    ## [gaphunter] Removing probes containing missing beta values.
+
+    ## [gaphunter] Using 159,956 probes and 816 samples.
+
+    ## [gaphunter] Searching for gap signals.
+
+    ## [gaphunter] Found 35,257 gap signals.
+
+    ## [gaphunter] Filtering out gap signals driven by outliers.
+
+    ## [gaphunter] Removed 29,562 gap signals driven by outliers from results.
+
+``` r
+xCalls <- gh$sampleresults
+colnames(xCalls) <- colnames(betas)
+maf <- apply(xCalls, 1, function(x) min(table(x)/length(x)))
+xCalls <- xCalls[maf > 0.05,]
+data <- alleleSharing(x=xCalls, y=NULL, relations=relations, idx.col="idx.x", idy.col="idx.y", verbose=TRUE)
+```
+
+    ## Hash relations
+
+    ## There are 0 SNPs dropped because of low call rate!
+
+    ## There are 0 samples set to NA because too little SNPs called!
+
+    ## Using 1313 polymorphic SNPs to determine allele sharing.
+
+    ## Running `square` IBS algorithm!
+
+    ## 816 of 333336 (0.24%) ...
+
+    ## 76650 of 333336 (22.99%) ...
+
+    ## 143300 of 333336 (42.99%) ...
+
+    ## 199950 of 333336 (59.98%) ...
+
+    ## 246600 of 333336 (73.98%) ...
+
+    ## 283250 of 333336 (84.97%) ...
+
+    ## 309900 of 333336 (92.97%) ...
+
+    ## 326550 of 333336 (97.96%) ...
+
+    ## 333200 of 333336 (99.96%) ...
+
+``` r
+mismatches <- inferRelations(data)
+```
+
+    ##                   Assumed relation
+    ## Predicted relation identical parentoffspring sibship unrelated
+    ##    identical             819               .       .         .
+    ##    parentoffspring         .              48       .         1
+    ##    sibship                 .               1      39         1
+    ##    unrelated               .               .       .    332427
+
+![](omicsPrint_files/figure-markdown_github/gaphunter-1.png)
+
+``` r
+mismatches
+```
+
+    ##            mean       var        colnames.x        colnames.y
+    ## 27837  1.691546 0.2637776 8655685145_R02C02 8795194028_R03C01
+    ## 67889  1.766946 0.1788761 9374341053_R03C02 9374341053_R02C02
+    ## 113736 1.683168 0.2562485 9340996017_R06C02 8795207040_R05C01
+    ##               relation       predicted
+    ## 27837        unrelated         sibship
+    ## 67889  parentoffspring         sibship
+    ## 113736       unrelated parentoffspring
 
 SessionInfo
 ===========
@@ -337,3 +418,11 @@ sessionInfo()
 
 Reference
 =========
+
+Abecasis, G. R., S. S. Cherny, W. O. Cookson, and L. R. Cardon. 2001. “GRR: graphical representation of relationship errors.” *Bioinformatics* 17 (8): 742–43.
+
+Bibikova, M., B. Barnes, C. Tsan, V. Ho, B. Klotzle, J. M. Le, D. Delano, et al. 2011. “High density DNA methylation array with single CpG site resolution.” *Genomics* 98 (4): 288–95.
+
+Chen, Y. A., M. Lemire, S. Choufani, D. T. Butcher, D. Grafodatskaya, B. W. Zanke, S. Gallinger, T. J. Hudson, and R. Weksberg. 2013. “Discovery of cross-reactive probes and polymorphic CpGs in the Illumina Infinium HumanMethylation450 microarray.” *Epigenetics* 8 (2): 203–9.
+
+Zhou, W., P. W. Laird, and H. Shen. 2016. “Comprehensive characterization, annotation and innovative use of Infinium DNA methylation BeadChip probes.” *Nucleic Acids Res.*, Oct.
