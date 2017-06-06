@@ -12,7 +12,7 @@ vignette: >
 bibliography: omicsPrint.bib
 ---
 
-Here we will show how you could verify the sample relationship on
+Here we will show how you could verify sample relationships on
 publicly available DNA methylation data, often a beta-value matrix
 from the Gene Expression Omnibus.
 
@@ -40,7 +40,7 @@ suppressPackageStartupMessages({ ##to get rid of annoying startup messages (like
 First we extract the data from GEO and select the platform on which
 the DNA methylation was measured (GPL13534).
 
-```{r, downloaddata, echo=FALSE}
+```{r, downloaddata}
 library(Biobase)
 library(GEOquery)
 # load series and platform data from GEO
@@ -54,7 +54,7 @@ We need to preprocess the metadata a little to obtain a clear picture
 of which samples belong to which individuals. Furthermore, some
 additional (carcinoma) samples have been removed.
 
-```{r, extractphenotypes, echo=FALSE}
+```{r, extractphenotypes}
 pheno <- pData(gset[[idx]])[, c("title", "characteristics_ch1", "characteristics_ch1.1",  "characteristics_ch1.2", "characteristics_ch1.3")]
 colnames(pheno) <- c("title", "sex", "age", "exposure", "tissue")
 pheno <- apply(pheno, 2, function(x) gsub("^.*: ", "", x))
@@ -76,7 +76,7 @@ Now we can extract the genotypes. The paper reported that the
 individuals are from cauciasian origin so we use a european set of
 SNPs; the GoNL set.
 
-```{r, extractgenotypes, echo=FALSE}
+```{r, extractgenotypes}
 library(DNAmArray)
 data(hg19.GoNLsnps) ##From DNAmArray
 cgs <- hg19.GoNLsnps$probe[hg19.GoNLsnps$distance_c <= 0]
