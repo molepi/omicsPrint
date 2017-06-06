@@ -12,6 +12,17 @@ vignette: >
 bibliography: omicsPrint.bib
 ---
 
+Here we will show how you could verify the sample relationship on
+publicly available DNA methylation data, often a beta-value matrix
+from the Gene Expression Omnibus.
+
+Here we use the beta-value matrix extracted from GEO (GSE52980). The
+data was generated to perform an epigenome analysis of human epidermal
+and dermal samples with aging and sun exposure[@Vandiver2015]. Since,
+multiple samples from the same individual have been used we should be
+able to verify this using genotypes extracted from the beta-values.
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(cache=TRUE, eval=TRUE, cache.lazy = FALSE)
 
@@ -26,7 +37,8 @@ suppressPackageStartupMessages({ ##to get rid of annoying startup messages (like
 })
 ```
 
-
+First we extract the data from GEO and select the platform on which
+the DNA methylation was measured (GPL13534).
 
 ```{r, downloaddata, echo=FALSE}
 library(Biobase)
@@ -37,6 +49,10 @@ idx <- grep("GPL13534", attr(gset, "names"))
 betas <- exprs(gset[[idx]])
 dim(betas)
 ```
+
+We need to preprocess the metadata a little to obtain a clear picture
+of which samples belong to which individuals. Furthermore, some
+additional (carcinoma) samples have been removed.
 
 ```{r, extractphenotypes, echo=FALSE}
 pheno <- pData(gset[[idx]])[, c("title", "characteristics_ch1", "characteristics_ch1.1",  "characteristics_ch1.2", "characteristics_ch1.3")]
@@ -50,13 +66,15 @@ pheno <- pheno[order(pheno$age),]
 nrow(pheno)/4
 pheno$sample_id <- rep(1:15, each=4)
 head(pheno)
-dim(betas)
 betas <- betas[, colnames(betas) %in% rownames(pheno)]
 mid <- match(colnames(betas), rownames(pheno))
 colnames(betas) <- pheno$sample_id[mid]
-
+dim(betas)
 ```
 
+Now we can extract the genotypes. The paper reported that the
+individuals are from cauciasian origin so we use a european set of
+SNPs; the GoNL set.
 
 ```{r, extractgenotypes, echo=FALSE}
 library(DNAmArray)
@@ -70,4 +88,6 @@ head(data)
 mismatches <- inferRelations(data)
 ```
 
+The related and unrelated pairs are separated very well and no
+mismatches are detected.
 

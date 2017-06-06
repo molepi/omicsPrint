@@ -187,8 +187,10 @@
 ##' @export
 alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx", idy.col="idy", rel.col="relation_type", callRate=0.95, coverageRate=2/3, phasing=FALSE, verbose=TRUE) {
 
-    if(is.null(relations))
+    if(is.null(relations)) {        
         relations <- .constructRelations(xnames=colnames(x), ynames=colnames(y), idx.col=idx.col, idy.col=idy.col, rel.col=rel.col)
+        relations <- relations[!duplicated(relations),]
+    }
 
     if(verbose)
         message("Hash relations")
