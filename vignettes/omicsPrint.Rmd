@@ -1,170 +1,100 @@
 ---
-title: "Sample relationship verification using 450k DNA Methylation data"
-author: "Maarten van Iterson"
+title: "Verifying sample relationships using genotypes or inferred genotypes"
+shorttitle: "Verifying sample relationships"
+package: "omicsPrint"
+author: 
+- name: "Maarten van Iterson"
+  affiliation: 
+  - "Department of Medical Statistics and Bioinformatics, Section Moleculair Epidemiology, Leiden University Medical Center"
+  email: mviterson@gmail.com
 date: "`r Sys.Date()`"
-output:
-  md_document:
-    variant: markdown_github
+abstract: >
+  Analysis of multiple omics datatypes from the same individuals is
+  becoming increasingly common. For example, several data repositories
+  contain genetic, transcriptomic and epigenetic (DNA methylation)
+  measurements on the same individuals, e.g. TCGA, Geuvadis,
+  BBMRI/BIOS, etc. We have developed a tool that can verify the sample
+  relationships between and across omics types. A small number of
+  misspecified samples can destroy analyses for example assuming an
+  analysis on unrelated individuals whereas parent offspring relations
+  exist.
+output: 
+  BiocStyle::html_document2:
+    toc: true
+    toc_float:
+      collapsed: false
 vignette: >
-  %\VignetteIndexEntry{omicsPrint}
+  %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 bibliography: omicsPrint.bib
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(cache=TRUE, eval=TRUE, cache.lazy = FALSE)
-
-rm(list=ls()) ##clear work space
-
-suppressPackageStartupMessages({ ##to get rid of annoying startup messages (like ours ;)!)
-    library(BBMRIomics) #from gitlab   
-    library(DNAmArray) #from github
-    library(omicsPrint) #from github
-      
-    library(BiocParallel) ##from bioc   
+suppressPackageStartupMessages({
+    library(omicsPrint)
+    set.seed(22062017)
 })
 ```
 
-This vignette shows how `omicsPrint` can be used to verify sample
-relationships using 450k DNA methylation data[@Bibikova2011]. In order
-to run the verification access to the raw idat-files is required as
-well as an overview of the reported sample relations. It is important
-to note that all the array should pass quality control, e.g. using
-[MethylAid](http://bioconductor.org/packages/MethylAid/), since
-bad-quality array could introduce spurious sample relations. 
+Here we illustrate the use of the package using artificially generated
+data. A few other vignettes are available that show the use of the
+package on experimental data, i.e. 450k DNA methylation, RNAsequencing
+data and imputed genotypes.
 
-> If only beta-values are available for the signal probes,
-> i.e. missing the rs-probes, probes containing SNPs should be
-> extracted and if informative enough these could be used!
+# Within omics sample relationship verification #
 
-The following steps are involved:
+## Create toy data ##
 
-1. Construct a targets-file containing path to the raw idat-files
-2. Construct `data.frame` containing reported relations
-3. Extract informative SNPs from 450k DNA methylation data
-4. Convert beta-values to genotypes
-5. Perform the sample matching across all pairs
-6. Report mismatches and provide graphical summary
+Here we generate a single vector with 100 randomly drawn integers from
+the set; 1, 2, 3, representing 100 SNP calls from a single
+individual. Three other samples are generated from this one by
+randomly swapping a certain fraction of the SNPs. For example,
+swapping only 5 SNPs only introduces some noise but should still
+reflect the same individual. However, swapping 50% of the SNPs is
+similar to the difference in genotypes between parents and
+offspring. Swapping all SNPs will result in a unrelated individual.
 
-## Construct targets and relations ##
-
-This part is specific to each data sets.
-
-```{r, prepare, echo=FALSE}
-##create targets file for LLS
-samplesheets <- getView("methylationSamplesheet", usrpwd=RP3_MDB_USRPWD, url=RP3_MDB, verbose=FALSE)
-path450k <- file.path(VM_BASE_DATA, "IlluminaHumanMethylation450k")
-samplesheets$biobank_id <- gsub("-.*$", "", samplesheets$ids)
-samplesheets$Basename <- with(samplesheets, file.path(path450k, "raw", Sentrix_Barcode,
-                                                        paste(Sentrix_Barcode, Sentrix_Position, sep = "_")))
-samplesheets <- samplesheets[!duplicated(samplesheets$run_id),]
-runs <- getView("getMethylationRuns", usrpwd=RP3_MDB_USRPWD, url=RP3_MDB, verbose=FALSE)
-runs <- runs[runs$qc == "passed",]    
-targets <- samplesheets[samplesheets$run_id %in% runs$run_id, ]
-targets <- targets[targets$biobank_id == "LLS",]
-##create data.frame with relations
-relations <- getView("getRelations", usrpwd=RP3_MDB_USRPWD, url=RP3_MDB, verbose=FALSE)
-relations <- subset(relations, !is.na(relation_type))
-relx <- getView("getMethylationRuns", usrpwd=RP3_MDB_USRPWD, url=RP3_MDB, verbose=FALSE)
-colnames(relx)[colnames(relx) == "run_id"] <- "idx"
-relx <- relx[!is.na(relx$idx),]
-relx <- relx[!duplicated(relx$idx),]
-relations <- merge(relations, relx[,c("ids", "idx")], by="ids") #link idx
-relations <- relations[!is.na(relations$idx),]
-##obtain reported relations
-bRels <- merge(relations, relx[, c("ids", "idx")], by.x="relation_id", by.y="ids")[,c("idx.x", "idx.y", "relation_type")]
-##obtain technical relations
-tRels <- merge(relx, relx, by="ids")[, c("idx.x", "idx.y")]
-tRels$relation_type <- "identical"
-relations <- rbind(bRels, tRels)    
+```{r, toydata}
+swap <- function(x, frac=0.05) {
+    n <- length(x)
+    k <- floor(n*frac)
+    x1 <- sample(1:n,k)
+    x2 <- sample(1:n,k) ##could be overlapping
+    x[x2] <- x[x1]
+    x
+}
+x1 <- 1 + rbinom(100, size=2, prob=1/3)
+x2 <- swap(x1, 0.05) ##strongly related e.g. replicate
+x3 <- swap(x1, 0.5) ##related e.g. parent off spring
+x4 <- swap(x1, 1) ##unrelated
+x <- cbind(x1, x2, x3, x4)
+head(x)
 ```
 
-In the end you should have a `data.frame` called targets and relations
-like these:
-
-```{r, targets}
-head(targets)
-```
-
-Occasionally, it is recommended to relabel some relations, for example
-using 'gsub':
-
-```{r, relations}
-head(relations)
-table(relations$relation_type)
-relations$relation_type <- gsub("2nd degree family", "unrelated", relations$relation_type)
-relations$relation_type <- gsub("has repeated measurements|has monozygotic twin", "unrelated", relations$relation_type)
-relations$relation_type <- gsub("inferred 1st degree family|has parent|has child", "parentoffspring", relations$relation_type)
-relations$relation_type <- gsub("has dizygotic twin|has sib", "sibship", relations$relation_type)
-table(relations$relation_type)
-```
-
-## Extract informative SNPs from 450k DNA methylation data ##
-
-The 65 SNPs available on the array are not enough to perform sample
-verification with high confidence. Fortunately, several probes on the
-array contain SNPs occuring frequently in different
-populations[@Chen2013; @Zhou2016]. We have extended the results of
-Zhou *et al.* using information from the dutch population
-[GoNL](http://www.nlgenome.nl/). 
-
-
-```{r, betas} 
-library(DNAmArray)
-data(hg19.GoNLsnps)
-cpgs <- unique(hg19.GoNLsnps$probe)
-library(BiocParallel)
-register(MulticoreParam(10))
-RGset <- read.metharray.exp.par(targets, verbose=FALSE)
-betas <- getBeta(RGset)
-betas <- rbind(betas[rownames(betas) %in% cpgs,], getSnpBeta(RGset))
-dim(betas)
-```
-
-Here, we extract all Illumina probe identifiers that have a GoNL SNP
-in there probe-sequence (see for more detail ?hg19.GoNLsnps) and the
-65 SNPs provided by Illumina. Furthermore, we have used the
-[DNAmArray](https://github.com/molepi/DNAmArray)
-`read.metharray.exp.par`-function to read in all idat files in
-parallel. 
-
-## Convert beta-values to genotypes ##
-
-Now we can convert the beta-values to genotypes (1, 2, 3). We have
-implemented a K-means clustering approach similar to the one proposed
-in the
-[wateRmelon](http://bioconductor.org/packages/wateRmelon/)-package. However,
-we have added some additional steps to ensure the cluster detected
-have a good separation and contain sufficient number of samples.
-
-```{r, betas2genotypes}
-xCalls <- beta2genotype(betas)
-xCalls[1:5, 1:5]
-```
-
-To get an idea of how the K-means clustering algorithm works a plot of
-the raw beta-values of a CpG affected by a SNP can be generated like
-this:
-
-```{r, clusters}
-hist(betas[rownames(betas) == rownames(xCalls)[1],], n=100, xlab="beta-values", main="CpG affect by a SNP")
-rug(betas[rownames(betas) == rownames(xCalls)[1],])
-```
-
-## Perform the sample matching across all pairs ##
+## Running the `allelesharing` algorithm ##
 
 We use Identity by State (IBS) for a set of SNPs to infer sample
-relations[@Abecasis2001].
+relations. See @Abecasis2001, for the description of this approach
+applied to genetic data. Briefly, between each sample pair the
+identity by state vector is calculated, which is a measure of genetic
+distance between individuals. Next the vector is summarized by its
+mean and variance. A mean of 2 and variance of 0 indicates that the
+samples are identical. 
 
-```{r, allelesharing}
-data <- alleleSharing(x=xCalls, y=NULL, relations=relations, idx.col="idx.x", idy.col="idx.y", verbose=TRUE)
-head(data)
+```{r, alleleSharing}
+data <- alleleSharing(x)
+data
 ```
+
+By default no relations are assumed only the self-self
+relations. Genotype calls can contain NA's, e.g. not measured in all
+samples or bad quality. Some pruning is performed to remove really bad
+cases.
 
 The output is a `data.frame` containing all pairwise comparisons with
 the mean and variance of the IBS over the set of SNPs and the reported
-and predicted sample relationship, including the identifiers.
+sample relationship, including the identifiers.
 
 ## Report mismatches and provide graphical summary ##
 
@@ -172,26 +102,75 @@ Since, we provided a list of known relations, assuming the majority is
 correct, we can build a classifier to discover missclassified
 relations. The current implementation uses linear discriminant
 analysis and generates a confusion-matrix, graphically representation
-of the classification boundary and outputs the missclassified sample
+of the classification boundaries and outputs the missclassified sample
 pairs.
 
-```{r, inferrelations}
-mismatches <- inferRelations(data)
-```
-
-Example using `gaphunter` from minfi:
-
-```{r, gaphunter}
-library(minfi)
-gh <- gaphunter(betas)
-xCalls <- gh$sampleresults
-colnames(xCalls) <- colnames(betas)
-maf <- apply(xCalls, 1, function(x) min(table(x)/length(x)))
-xCalls <- xCalls[maf > 0.05,]
-data <- alleleSharing(x=xCalls, y=NULL, relations=relations, idx.col="idx.x", idy.col="idx.y", verbose=TRUE)
+```{r, inferrelations, fig.cap = "Scatter-plot of IBS mean and variance with classification boundary. For pairwise comparison between the samples without specifying sample relationships."}
 mismatches <- inferRelations(data)
 mismatches
 ```
+
+Indeed, there is one misclassified sample, the replicate that we
+introduced. The true relationship with between `x1` and `x2` is an
+identical relation. Furthermore, we see two sample pairs with mean IBS
+of 1.7 and variance 0.2 which is an indication that also these pairs
+share a considerable number of alleles. In such, cases we should
+provide the known relations in a `data.frame` and specify the relation
+types.
+
+```{r, extendedrelations}
+relations <- expand.grid(idx = colnames(x), idy= colnames(x))
+relations$relation_type <- "unrelated"
+relations$relation_type[relations$idx == relations$idy] <- "identical"
+relations$relation_type[c(2,5)] <- "identical" ##replicate
+relations$relation_type[c(3,7,9,10)] <- "parent offspring"
+relations
+```
+
+Rerun the allelesharing algorithm now provided with the known
+relations.
+
+```{r, addrelations, fig.cap = "Scatter-plot of IBS mean and variance with classification boundaries. For pairwise comparison between the samples with specifying sample relationships."}
+data <- alleleSharing(x, relations=relations)
+data
+mismatches <- inferRelations(data)
+mismatches
+```
+
+Now there are no misclassified sample relations.
+
+# Across omics sample relationship verification #
+
+The previous example showed how to perform sample relationship
+verification within an omics data type. If a second set of overlapping
+SNPs is available, obtained from a different omic type, for the same
+or related individuals sample relationshi verification can be run
+between these two.
+
+```{r, xyallelesharing, fig.cap = "Scatter-plot of IBS mean and variance with classification boundary. For pairwise comparison between the samples without specifying sample relationships."}
+rownames(x) <- paste0("rs", 1:100)
+y <- x[sample(1:100, 80),]
+data <- alleleSharing(x, y)
+data
+mismatches <- inferRelations(data)
+mismatches
+```
+
+Notice pruning is performed on both data types and automatically the
+overlapping set of SNPs (80) is used, provided that the rownames
+between `x` and `y` are the same (Note also this holds for providing
+relations where the relation identifiers `idx` and `idy` should match
+with the columnames of `x` and `y`).
+
+```{r, addrelations2, fig.cap = "Scatter-plot of IBS mean and variance with classification boundaries. For pairwise comparison between the samples with specifying sample relationships."}
+data <- alleleSharing(x, y, relations)
+data
+mismatches <- inferRelations(data)
+mismatches
+```
+
+Again providing the known and true relationships yield no
+missclassified sample relationships.
 
 # SessionInfo #
 
@@ -199,4 +178,4 @@ mismatches
 sessionInfo()
 ```
 
-# Reference # 
+# Reference #

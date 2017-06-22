@@ -22,6 +22,17 @@ predict mismatches
 \details{
 predict mismatches
 }
+\examples{
+set.seed(12345)
+beta <- matrix(runif(100*10, 0,1), nrow=100)
+beta[1:5, 1:5]
+colnames(beta) <- paste0("sample", 1:10)
+genotype <- beta2genotype(beta)
+genotype[1:5, 1:5]
+data <- alleleSharing(genotype)
+head(data)
+inferRelations(data)
+}
 \author{
 mvaniterson
 }

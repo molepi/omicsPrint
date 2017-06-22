@@ -15,11 +15,11 @@ alleleSharing(x, y = NULL, relations = NULL, idx.col = "idx",
 
 \item{relations}{data.frame with relations and their mapping identifiers}
 
-\item{idx.col}{columname conaining mapping identifiers}
+\item{idx.col}{colum name containing mapping identifiers}
 
-\item{idy.col}{columname conaining mapping identifiers}
+\item{idy.col}{colum name containing mapping identifiers}
 
-\item{rel.col}{columname containing the relations}
+\item{rel.col}{colum name containing the relations}
 
 \item{callRate}{default 0.95 SNPs that are called in less then the threshold are dropped}
 
@@ -27,7 +27,7 @@ alleleSharing(x, y = NULL, relations = NULL, idx.col = "idx",
 
 \item{phasing}{FALSE}
 
-\item{verbose}{show progress}
+\item{verbose}{show progress default TRUE}
 }
 \value{
 data.frame with mean and variance ibs between all pairs
@@ -38,6 +38,16 @@ allele sharing based on ibs
 \details{
 calculate mean variance between to vectors/matrices genotypes
 coded as 1,2,3
+}
+\examples{
+set.seed(12345)
+beta <- matrix(runif(100*10, 0,1), nrow=100)
+beta[1:5, 1:5]
+colnames(beta) <- paste0("sample", 1:10)
+genotype <- beta2genotype(beta)
+genotype[1:5, 1:5]
+data <- alleleSharing(genotype)
+head(data)
 }
 \author{
 mvaniterson

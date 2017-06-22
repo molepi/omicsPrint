@@ -1,6 +1,7 @@
-.rectangular <- function(x, y, verbose){
+.rectangular <- function(x, y, verbose = TRUE){
 
-    message("Running `rectangular` IBS algorithm!")
+    if( verbose )
+        message("Running `rectangular` IBS algorithm!")
 
     if( nrow(x) != nrow(y) )
         stop("Dimension mismatch!")
@@ -18,13 +19,11 @@
     for(j in seq_len(M)) {
         ibs <- 2 - abs(x - y[,j])
         mn[indices + N*(j-1)] <- colMeans(ibs, na.rm = na.rm)
-        s2[indices + N*(j-1)] <- colVars(ibs, na.rm = na.rm)
-        ##slower
-        ##tabs <- apply(ibs, 2, tabulate)
-        ##mn[indices + N*(j-1)] <- crossprod(c(1,2), tabs)/K
-        ##xs2[indices + N*(j-1)] <- (crossprod(c(1,4), tabs) - K*mn[indices + N*(j-1)]^2)/(K-1)
-        if( verbose & (j %% floor(M/10) == 0 | j == 0) )
+        s2[indices + N*(j-1)] <- colVars(as.matrix(ibs), na.rm = na.rm)
+
+        if( verbose & (j %% 100 == 0 | j == 1) )
             message(j*N, " of ", N*M, " (", round(100*j/M, 2), "%) ...")
+
     }
     data.frame(mean = mn,
                var = s2,
@@ -32,9 +31,10 @@
                colnames.y = rep(colnames(y), each=N))
 }
 
-.square <- function(x, y, verbose){
+.square <- function(x, y, verbose = TRUE){
 
-    message("Running `square` IBS algorithm!")
+    if( verbose )
+        message("Running `square` IBS algorithm!")
 
     if( (ncol(x) != ncol(y)) | (nrow(x) != nrow(y)) )
         stop("Dimension mismatch!")
@@ -53,11 +53,7 @@
         k <- k + length(indices)
         ibs <- 2 - abs(x[, indices, drop=FALSE] - y[,j])
         mn[k-length(indices) + indices-(j-1)] <- colMeans(ibs, na.rm = na.rm)
-        s2[k-length(indices) + indices-(j-1)] <- colVars(ibs, na.rm = na.rm)
-        ##slower
-        ##tabs <- apply(ibs, 2, tabulate)
-        ##mn[k-length(indices) + indices-(j-1)] <- crossprod(c(1,2), tabs)/K
-        ##s2[k-length(indices) + indices-(j-1)] <- (crossprod(c(1,4), tabs) - K*mn[k-length(indices) + indices-(j-1)]^2)/(K-1)
+        s2[k-length(indices) + indices-(j-1)] <- colVars(as.matrix(ibs), na.rm = na.rm)
 
         if( verbose & (j %% 100 == 0 | j == 1) )
             message(k, " of ", N*(N+1)/2, " (", round(100*k/(N*(N+1)/2), 2), "%) ...")
@@ -65,19 +61,21 @@
 
     data.frame(mean = mn,
                var = s2,
-               colnames.x = unlist(vapply(1:N, function(k) colnames(x)[k:N])),
+               colnames.x = unlist(sapply(1:N, function(k) colnames(x)[k:N])),
                colnames.y = rep(colnames(y), N:1))
 }
 
 
 .phasing <- function(x, y, rHash) {
     ##relabel those in x according to those in y
-    ##relabelling is based on the idea that snp's in x should be positively correlated with those in y
-    ##robust against NA's and outliers
+
+    ##relabelling is based on the idea that snp's in x should be
+    ##positively correlated with those in y robust against NA's and
+    ##outliers
 
     ##FIX level `identical`
 
-    identical <- names(grep("identical", as.list(rHash), value=TRUE))
+    identical <- names(grep("identical", as.list(rHash), value = TRUE))
 
     colnames.x <- gsub(":.*$", "", identical)
     colnames.y <- gsub("^.*:", "", identical)
@@ -94,76 +92,68 @@
     midx <- match(colnames.x, colnames(x))
     midy <- match(colnames.y, colnames(y))
 
-    signs <- sign(unlist(lapply(seq_len(nrow(x)), function(i) cov(x[i,midx], y[i,midy], use = "complete.obs", method = "spearman"))))
+    signs <- sign(unlist(lapply(seq_len(nrow(x)), function(i)
+        cov(x[i,midx], y[i,midy], use = "complete.obs", method = "spearman"))))
+
     for(i in seq_len(nrow(x))) {
         if( signs[i] < 0 ) {
             xi <- x[i,]
-            x[i,xi==1] <- 3
-            x[i,xi==3] <- 1
+            x[i, xi==1] <- 3
+            x[i, xi==3] <- 1
         }
     }
-    return(x)
-
-    ##better/faster?
-    ## for(i in 1:nrow(x)) {
-    ##     org <- sum(diag(table(x[i, midx], y[i, midy])))
-    ##     x[i, midx] <- x[i, midx] + y[i, midy]
-    ##     y[i, midy] <- x[i, midx] - y[i, midy]
-    ##     x[i, midx] <- x[i, midx] - y[i, midy]
-    ##     if(sum(diag(table(x[i, midx], y[i, midy]))) < org)  {
-    ##         x[i, midx] <- x[i, midx] + y[i, midy]
-    ##         y[i, midy] <- x[i, midx] - y[i, midy]
-    ##         x[i, midx] <- x[i, midx] - y[i, midy]
-    ##     }
-    ## }
-    ## return(x)
+    x
 }
 
 .hashRelations <- function(relations, idx.col = "idx", idy.col = "idy", rel.col = "relation_type"){
     hash <- new.env()
     keys <- paste(relations[, idx.col], relations[, idy.col], sep=":")
-    values <- relations[, rel.col]
+    values <- as.character(relations[, rel.col])
 
     ##are there inconsistent relations
     if( any(tapply(values, keys, function(x) length(unique(x)) > 1)) )
         stop("Nonconsistent relations!")
 
-    ##redundant relations are automatically remove!
+    ##redundant relations are automatically removed!
     tmp <- mapply(assign, keys, values, MoreArgs = list(envir = hash))
     hash
 }
 
-.constructRelations <- function(xnames, ynames, idx.col, idy.col, rel.col) {
+.constructRelations <- function(xnames, ynames, idx.col = "idx", idy.col = "idy", rel.col = "relation_type") {
     if( !is.null(ynames) )
         relations <- expand.grid(idx = xnames, idy = ynames, stringsAsFactors = FALSE)
     else
         relations <- expand.grid(idx = xnames, idy = xnames)
     relations[,rel.col] <- "unrelated"
-    
     identical <- relations[,idx.col] == relations[,idy.col]
-    
+
     relations[identical, rel.col] <- "identical"
-    relations[relations[,rel.col] != "unrelated",]
+    relations <- relations[relations[,rel.col] != "unrelated",]
+    rownames(relations) <- 1:nrow(relations)
+    relations
 }
 
 
-.pruning <- function(x, callRate, coverageRate, verbose) {
+.pruning <- function(x, callRate = 0.95, coverageRate = 2/3, verbose = TRUE) {
+
+    nsnps <- nrow(x)
+    nsamples <- ncol(x)
 
     ##drop SNPs difficult to call
-    calledSNPs <- apply(x, 1, function(x) sum(!is.na(x))/length(x))
+    calledSNPs <- apply(x, 1, function(x) sum(!is.na(x))/nsamples)
 
     if( verbose )
-        message("There are ", sum(calledSNPs <= callRate), " SNPs dropped because of low call rate!")
-
-    x <- x[calledSNPs > callRate,]
+        message("There is/are ", sum(calledSNPs <= callRate),
+                " SNP(s) dropped because of low call rate!")
 
     ##if the coverage of called SNPs is not larger then coverageRate do not calculate IBS
-    coverage <- apply(x, 2, function(x) sum(!is.na(x))/length(x))
+    coverage <- apply(x, 2, function(x) sum(!is.na(x))/nsnps)
 
     if( verbose )
-        message("There are ", sum(coverage < coverageRate), " samples set to NA because too little SNPs called!")
+        message("There is/are ", sum(coverage < coverageRate),
+                " sample(s) set to NA because too little SNPs called!")
 
-    x[, coverage >= coverageRate] ##drop those
+    x[calledSNPs > callRate, coverage >= coverageRate, drop=FALSE] ##drop those
 }
 
 ##' allele sharing based on ibs
@@ -180,16 +170,32 @@
 ##' @param callRate default 0.95 SNPs that are called in less then the threshold are dropped
 ##' @param coverageRate default 2/3 samples with less then threshold SNPs called are set to NA
 ##' @param phasing FALSE
-##' @param verbose show progress
+##' @param verbose show progress default TRUE
 ##' @return data.frame with mean and variance ibs between all pairs
 ##' @author mvaniterson
 ##' @importFrom matrixStats colVars
 ##' @importFrom stats cov
 ##' @export
+##' @examples
+##' set.seed(12345)
+##' beta <- matrix(runif(100*10, 0,1), nrow=100)
+##' beta[1:5, 1:5]
+##' colnames(beta) <- paste0("sample", 1:10)
+##' genotype <- beta2genotype(beta)
+##' genotype[1:5, 1:5]
+##' data <- alleleSharing(genotype)
+##' head(data)
 alleleSharing <- function(x, y = NULL, relations = NULL, idx.col = "idx", idy.col = "idy", rel.col = "relation_type", callRate = 0.95, coverageRate = 2/3, phasing = FALSE, verbose = TRUE) {
 
-    if( is.null(relations )) {        
-        relations <- .constructRelations(xnames = colnames(x), ynames = colnames(y), idx.col = idx.col, idy.col = idy.col, rel.col = rel.col)
+    if(is.null(colnames(x)))
+        stop("Colnames should be given!")
+
+    if(!is.null(y) & is.null(colnames(y)))
+        stop("Colnames should be given!")
+
+    if( is.null(relations )) {
+        relations <- .constructRelations(xnames = colnames(x), ynames = colnames(y),
+                                         idx.col = idx.col, idy.col = idy.col, rel.col = rel.col)
         relations <- relations[!duplicated(relations),]
     }
 
@@ -215,13 +221,13 @@ alleleSharing <- function(x, y = NULL, relations = NULL, idx.col = "idx", idy.co
         x <- x[rId,]
         rId <- match(rows, rownames(y))
         y <- y[rId,]
-        
+
         if( phasing )
             x <- .phasing(x, y, rHash)
-        
+
         if( verbose )
             message("Using ", nrow(x), " polymophic SNPs to determine allele sharing.")
-        
+
         data <- .rectangular(x, y, verbose)
         if( !(any(colnames(x) %in% data$colnames.x) & any(colnames(y) %in% data$colnames.y)) )
             stop("rHash and x or y do not match: probably swap 'x' and 'y'!")
@@ -247,6 +253,16 @@ alleleSharing <- function(x, y = NULL, relations = NULL, idx.col = "idx", idy.co
 ##' @importFrom graphics contour legend plot points
 ##' @importFrom MASS lda
 ##' @export
+##' @examples
+##' set.seed(12345)
+##' beta <- matrix(runif(100*10, 0,1), nrow=100)
+##' beta[1:5, 1:5]
+##' colnames(beta) <- paste0("sample", 1:10)
+##' genotype <- beta2genotype(beta)
+##' genotype[1:5, 1:5]
+##' data <- alleleSharing(genotype)
+##' head(data)
+##' inferRelations(data)
 inferRelations <- function(data, n = 100, plot.it = TRUE){
 
     data <- droplevels(data)
@@ -259,7 +275,7 @@ inferRelations <- function(data, n = 100, plot.it = TRUE){
     print(table(`Predicted relation` = data$predicted, `Assumed relation` = data$relation), zero.print = ".")
 
     id <- which(data$predicted != data$relation)
-    
+
     if( plot.it )
         plot(data[, c("mean", "var")], pch = ".", cex = 3, col = as.integer(data$relation), xlab = "mean (IBS)", ylab = "variance (IBS)")
 
@@ -268,7 +284,7 @@ inferRelations <- function(data, n = 100, plot.it = TRUE){
     grid <- expand.grid(mean = xp, var = yp)
     predicted <- MASS:::predict.lda(model, grid)
     posterior <- predicted$posterior
-    
+
     if( ncol(posterior) > 2 ) {
         for(k in seq_len(ncol(posterior))) {
             zp <- posterior[, k] - apply(posterior[,-k], 1, max)
@@ -298,6 +314,12 @@ inferRelations <- function(data, n = 100, plot.it = TRUE){
 ##' @author mvaniterson
 ##' @importFrom stats kmeans
 ##' @export
+##' @examples
+##' set.seed(12345)
+##' beta <- matrix(runif(100*10, 0,1), nrow=100)
+##' beta[1:5, 1:5]
+##' genotype <- beta2genotype(beta)
+##' genotype[1:5, 1:5]
 beta2genotype <- function (betas, na.rm = TRUE, minSep = 0.25, minSize = 5, centers = c(0.2, 0.5, 0.8))
 {
     genotypes <- apply(betas, 1, function(x) {
@@ -306,9 +328,9 @@ beta2genotype <- function (betas, na.rm = TRUE, minSep = 0.25, minSize = 5, cent
 
         if ( !inherits(km, "try-error") ) {
             if ( all(abs(rep(km$centers, 3) - rep(km$centers,
-                                                 each = 3))[-c(1, 5, 9)] > minSep) ) {
+                                                  each = 3))[-c(1, 5, 9)] > minSep) ) {
                 if ( 100 * min(as.numeric(table(km$cluster)))/length(x) >
-                    minSize )
+                     minSize )
                     return(km$cluster)
             }
         }

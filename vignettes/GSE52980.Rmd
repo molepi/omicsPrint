@@ -1,12 +1,20 @@
 ---
 title: "Sample relationship verification using 450k DNA Methylation data: beta-values"
-author: "Maarten van Iterson"
+shorttitle: "Verifying sample relationships using beta-values"
+package: "omicsPrint"
+author: 
+- name: "Maarten van Iterson"
+  affiliation: 
+  - "Department of Medical Statistics and Bioinformatics, Section Moleculair Epidemiology, Leiden University Medical Center"
+  email: mviterson@gmail.com
 date: "`r Sys.Date()`"
-output:
-  md_document:
-    variant: markdown_github
+output: 
+  BiocStyle::html_document2:
+    toc: true
+    toc_float:
+      collapsed: false
 vignette: >
-  %\VignetteIndexEntry{omicsPrint}
+  %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 bibliography: omicsPrint.bib
@@ -24,15 +32,11 @@ able to verify this using genotypes extracted from the beta-values.
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(cache=TRUE, eval=TRUE, cache.lazy = FALSE)
-
-rm(list=ls()) ##clear work space
-
-suppressPackageStartupMessages({ ##to get rid of annoying startup messages (like ours ;)!)
-    library(omicsPrint) #from github     
+suppressPackageStartupMessages({
+    library(omicsPrint)
     library(Biobase)
     library(GEOquery)
-    library(DNAmArray) #from github     
+    library(DNAmArray) #see https://github.com/molepi/DNAmArray     
     library(minfi)
 })
 ```
@@ -72,9 +76,18 @@ colnames(betas) <- pheno$sample_id[mid]
 dim(betas)
 ```
 
-Now we can extract the genotypes. The paper reported that the
-individuals are from cauciasian origin so we use a european set of
-SNPs; the GoNL set.
+Now we can extract the genotypes. 
+
+If we would have had the raw idats we could extract the 65
+SNPs. However, experiences show that the 65 SNPs available on the
+array are not enough to perform sample verification with high
+confidence. Fortunately, several probes on the array contain SNPs
+occuring frequently in different populations[@Chen2013; @Zhou2016]. We
+have extended the results of Zhou *et al.* using information from the
+dutch population [GoNL](http://www.nlgenome.nl/).
+
+The paper reported that the individuals are from cauciasian origin so
+we use a european set of SNPs; the GoNL set.
 
 ```{r, extractgenotypes}
 library(DNAmArray)
@@ -91,3 +104,10 @@ mismatches <- inferRelations(data)
 The related and unrelated pairs are separated very well and no
 mismatches are detected.
 
+# SessionInfo #
+
+```{r, sessioninfo}
+sessionInfo()
+```
+
+# Reference #

@@ -27,6 +27,13 @@ convert betas to genotypes
 \details{
 based on idea's from Leonard Schalkwyk (wateRmelon)
 }
+\examples{
+set.seed(12345)
+beta <- matrix(runif(100*10, 0,1), nrow=100)
+beta[1:5, 1:5]
+genotype <- beta2genotype(beta)
+genotype[1:5, 1:5]
+}
 \author{
 mvaniterson
 }
