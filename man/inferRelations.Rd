@@ -9,7 +9,7 @@ inferRelations(data, n = 100, plot.it = TRUE)
 \arguments{
 \item{data}{output from allelesharing}
 
-\item{n}{= 100 default interpolation}
+\item{n}{= 100 default interpolation for showing the classification boundaries}
 
 \item{plot.it}{= TRUE default plot classification graph}
 }
@@ -20,7 +20,11 @@ predicted mismatches
 predict mismatches
 }
 \details{
-predict mismatches
+based on all data a classifier is build using Linear Discriminant
+Analysis and on the same data a prediction is performed in order
+to detect wrong sample relationships. The assumption is that the
+majority of sample relations is correct otherwise we could not do
+this!
 }
 \examples{
 set.seed(12345)

@@ -156,20 +156,41 @@
     x[calledSNPs > callRate, coverage >= coverageRate, drop=FALSE] ##drop those
 }
 
-##' allele sharing based on ibs
+##' Run the allele sharing algorithm based on ibs
 ##'
-##' calculate mean and variance of identity by state between genotypes
-##' coded as 1,2,3
+##' calculate mean and variance of identity by state between
+##' genotypes, coded as 1,2,3, of all sample pairs either give one
+##' omic inferred set of SNPs or two from different omic types.
+##'
+##' 'phasing' is required if methylation data inferred genotypes are
+##' compared with DNA based genotypes, i.e., DNA based genotype is 3
+##' whereas methylation is 1. The phasing step will fix this.
+##'
+##' Notice that there are two algorithms for calculating allele
+##' sharing. One for the case one matrix is provided and one for the
+##' case two, x and y, are provided. If one is provided the algorithm
+##' takes in account the symmetric relations between pairs i.e. x12 =
+##' x21 etc.
+##'
+##' To improve the lookup of relations, which can be millions of say
+##' 1000 samples are provided, a hash-table is created from the
+##' provided data.frame with relations.
+##' 
 ##' @title allele sharing based on ibs
-##' @param x genotype vector or matrix
-##' @param y genotype vector or matrix
-##' @param relations data.frame with relations and their mapping identifiers
-##' @param idx.col colum name containing mapping identifiers
-##' @param idy.col colum name containing mapping identifiers
-##' @param rel.col colum name containing the relations
-##' @param callRate default 0.95 SNPs that are called in less then the threshold are dropped
-##' @param coverageRate default 2/3 samples with less then threshold SNPs called are set to NA
-##' @param phasing FALSE
+##' @param x genotype matrix with row and column names
+##' @param y genotype matrix with row and column names
+##' @param relations 'data.frame' with relations and their mapping
+##'     identifiers, provide columns if different from the default and
+##'     beware identifiers should match with colnames of x and y.
+##' @param idx.col column name containing mapping identifiers
+##' @param idy.col column name containing mapping identifiers
+##' @param rel.col column name containing the relations,
+##'     i.e. identical, parentoffspring, etc.
+##' @param callRate default 0.95 SNPs that are called in less then the
+##'     threshold are dropped
+##' @param coverageRate default 2/3 samples with less then threshold
+##'     SNPs called are set to NA
+##' @param phasing default FALSE
 ##' @param verbose show progress default TRUE
 ##' @return data.frame with mean and variance ibs between all pairs
 ##' @author mvaniterson

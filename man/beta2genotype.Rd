@@ -8,24 +8,28 @@ beta2genotype(betas, na.rm = TRUE, minSep = 0.25, minSize = 5,
   centers = c(0.2, 0.5, 0.8))
 }
 \arguments{
-\item{betas}{beta matrix of probes containing SNPs}
+\item{betas}{beta matrix of probes possibly affected SNPs}
 
-\item{na.rm}{TRUE drop cp for which no clustering was observed}
+\item{na.rm}{TRUE drop cpg for which no clustering was observed}
 
 \item{minSep}{minimal separation between clusters}
 
 \item{minSize}{size of smallest cluster (in percentage)}
 
-\item{centers}{center of clusters}
+\item{centers}{center of clusters, defaults to 0.2, 0.5, 0.8.}
 }
 \value{
 matrix with genotypes
 }
 \description{
-convert betas to genotypes
+convert DNA methylation beta-value to inferred genotypes
 }
 \details{
-based on idea's from Leonard Schalkwyk (wateRmelon)
+Using kmeans unsupervised clustering to infer genotypes based on
+idea's from Leonard Schalkwyk; wateRmelon packages.
+
+'minSep' and 'minSize' ensure good clusters are found.
+This function is similar to the gaphunter approach implemented in minfi.
 }
 \examples{
 set.seed(12345)
