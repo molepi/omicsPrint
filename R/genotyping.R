@@ -143,22 +143,22 @@
     calledSNPs <- apply(x, 1, function(x) sum(!is.na(x))/nsamples)
 
     if( verbose )
-        message("There is/are ", sum(calledSNPs <= callRate),
-                " SNP(s) dropped because of low call rate!")
+        message("There are ", sum(calledSNPs <= callRate),
+                " SNP dropped because of low call rate!")
 
     ##if the coverage of called SNPs is not larger then coverageRate do not calculate IBS
     coverage <- apply(x, 2, function(x) sum(!is.na(x))/nsnps)
 
     if( verbose )
-        message("There is/are ", sum(coverage < coverageRate),
-                " sample(s) set to NA because too little SNPs called!")
+        message("There are ", sum(coverage < coverageRate),
+                " sample set to NA because too little SNPs called!")
 
     x[calledSNPs > callRate, coverage >= coverageRate, drop=FALSE] ##drop those
 }
 
 ##' allele sharing based on ibs
 ##'
-##' calculate mean variance between to vectors/matrices genotypes
+##' calculate mean and variance of identity by state between genotypes
 ##' coded as 1,2,3
 ##' @title allele sharing based on ibs
 ##' @param x genotype vector or matrix
@@ -243,10 +243,14 @@ alleleSharing <- function(x, y = NULL, relations = NULL, idx.col = "idx", idy.co
 
 ##' predict mismatches
 ##'
-##' predict mismatches
+##' based on all data a classifier is build using Linear Discriminant
+##' Analysis and on the same data a prediction is performed in order
+##' to detect wrong sample relationships. The assumption is that the
+##' majority of sample relations is correct otherwise we could not do
+##' this!
 ##' @title predict mismatches
 ##' @param data output from allelesharing
-##' @param n = 100 default interpolation
+##' @param n = 100 default interpolation for showing the classification boundaries
 ##' @param plot.it = TRUE default plot classification graph
 ##' @return predicted mismatches
 ##' @author mvaniterson
@@ -301,15 +305,19 @@ inferRelations <- function(data, n = 100, plot.it = TRUE){
     invisible(data[id,])
 }
 
-##' convert betas to genotypes
+##' convert DNA methylation beta-value to inferred genotypes
 ##'
-##' based on idea's from Leonard Schalkwyk (wateRmelon)
+##' Using kmeans unsupervised clustering to infer genotypes based on
+##' idea's from Leonard Schalkwyk; wateRmelon packages.
+##'
+##' 'minSep' and 'minSize' ensure good clusters are found.
+##' This function is similar to the gaphunter approach implemented in minfi.
 ##' @title converts beta-values to genotypes (1, 2 and 3)
-##' @param betas beta matrix of probes containing SNPs
-##' @param na.rm TRUE drop cp for which no clustering was observed
+##' @param betas beta matrix of probes possibly affected SNPs
+##' @param na.rm TRUE drop cpg for which no clustering was observed
 ##' @param minSep minimal separation between clusters
 ##' @param minSize size of smallest cluster (in percentage)
-##' @param centers center of clusters
+##' @param centers center of clusters, defaults to 0.2, 0.5, 0.8.
 ##' @return matrix with genotypes
 ##' @author mvaniterson
 ##' @importFrom stats kmeans

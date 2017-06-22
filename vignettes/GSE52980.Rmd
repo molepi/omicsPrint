@@ -32,6 +32,7 @@ able to verify this using genotypes extracted from the beta-values.
 
 
 ```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval=FALSE)
 suppressPackageStartupMessages({
     library(omicsPrint)
     library(Biobase)

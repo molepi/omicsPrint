@@ -1,0 +1,124 @@
+---
+title: "Sample relationship verification using 450k DNA Methylation data: beta-values"
+author: "Maarten van Iterson"
+date: "`r Sys.Date()`"
+output:
+  md_document:
+    variant: markdown_github
+vignette: >
+  %\VignetteIndexEntry{omicsPrint}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: omicsPrint.bib
+---
+
+Here we will show how you could verify the sample relationship on
+publicly available DNA methylation data, often a beta-value matrix
+from the Gene Expression Omnibus.
+
+Here we use the beta-value matrix extracted from GEO (GSE52980). The
+data was generated to perform an epigenome analysis of human epidermal
+and dermal samples with aging and sun exposure[@Vandiver2015]. Since,
+multiple samples from the same individual have been used we should be
+able to verify this using genotypes extracted from the beta-values.
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE, eval=TRUE, cache.lazy = FALSE)
+
+rm(list=ls()) ##clear work space
+
+suppressPackageStartupMessages({ ##to get rid of annoying startup messages (like ours ;)!)
+    library(omicsPrint) #from github
+    library(Biobase)
+    library(GEOquery)
+    library(DNAmArray) #from github
+    library(minfi)
+})
+```
+
+First we extract the data from GEO and select the platform on which
+the DNA methylation was measured (GPL13534).
+
+```{r, downloaddata, echo=FALSE}
+library(Biobase)
+library(GEOquery)
+gset <- getGEO("GSE24260", GSEMatrix = TRUE, getGPL=TRUE)
+
+DNA <- exprs(gset[[1]])
+colnames(DNA) <- gsub("^.* ", "", pData(phenoData(hset[[1]]))$source_name_ch1)
+rownames(DNA) <- gsub("-.*$", "", rownames(DNA))
+dim(DNA)
+DNA[1:5, 1:5]
+
+##drop Mt
+DNA <- DNA[grepl("^rs.*", rownames(DNA)),]
+
+
+gset <- getGEO("GSE36369", GSEMatrix = TRUE, getGPL=FALSE)
+DNAm <- exprs(gset[[1]])
+colnames(DNAm) <- pData(phenoData(gset[[1]]))$source_name_ch1
+colnames(DNAm)[grepl("Blood", colnames(DNAm))] <- paste0("Blood", 1:34)
+dim(DNAm)
+DNAm[1:5, 1:5]
+```
+
+```{r, mapdna, echo=FALSE}
+library(SNPlocs.Hsapiens.dbSNP144.GRCh37)
+snps <- SNPlocs.Hsapiens.dbSNP144.GRCh37
+locs <- snpsById(snps, rownames(DNA), ifnotfound="drop")
+map <- paste(seqnames(locs), start(locs), sep=":")
+names(map) <- locs$RefSNP_id
+DNA <- DNA[rownames(DNA) %in% names(map),]
+mid <- match(rownames(DNA), names(map))
+rownames(DNA)[mid] <- as.character(map)
+DNA[1:5, 1:5]
+
+```
+
+```{r, mapdnam, echo=FALSE}
+library(DNAmArray)
+data(hg19.GoNLsnps)
+snps <- hg19.GoNLsnps[hg19.GoNLsnps$probe %in% rownames(DNAm) &
+                      hg19.GoNLsnps$variantType == "SNP",]
+map <- snps$probe
+names(map) <- paste(snps$CHROM, snps$snpBeg, sep=":")
+names(map) <- gsub("chr", "ch", names(map))
+
+DNAm <- DNAm[rownames(DNAm) %in% map,]
+mid <- match(rownames(DNAm), map)
+rownames(DNAm) <- names(map)[mid]
+
+
+```
+
+
+
+
+```{r, allelesharing, echo=FALSE}
+
+convert <- function(x) {
+    x[x == "AA"] <- 1
+    x[x == "AB"] <- 2
+    x[x == "BB"] <- 3
+    x
+}
+
+DNA <- apply(DNA, 2, convert)
+rnames <- rownames(DNA)
+DNA <- apply(DNA, 2, as.integer)
+rownames(DNA) <- rnames
+DNA <- t(DNA)
+
+DNA[1:5, 1:5]
+DNAm <- beta2genotype(DNAm)
+DNAm[1:5, 1:5]
+
+library(omicsPrint)
+data <- alleleSharing(DNAm, DNA, phasing=TRUE)
+head(data)
+
+mismatches <- inferRelations(data)
+mismatches
+
+```
