@@ -1,4 +1,4 @@
-# Cross omic genetic fingerprinting and phenotyping #
+# Cross omic genetic fingerprinting #
 
 ![alt text](http://www.molepi.nl/images/logo.png)
 
