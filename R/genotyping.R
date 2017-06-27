@@ -25,10 +25,8 @@
             message(j*N, " of ", N*M, " (", round(100*j/M, 2), "%) ...")
 
     }
-    data.frame(mean = mn,
-               var = s2,
-               colnames.x = rep(colnames(x), M),
-               colnames.y = rep(colnames(y), each=N))
+    data.frame(mean = mn, var = s2,
+               colnames.x = rep(colnames(x), M), colnames.y = rep(colnames(y), each=N))
 }
 
 .square <- function(x, y, verbose = TRUE){
@@ -46,23 +44,19 @@
 
     ##calculates mean and variance of IBS between all unique pairs of x (and y)
     N <- ncol(x)
-    k <- 0
+    k <- 1
     mn <- s2 <- numeric(length = N*(N+1)/2)
     for(j in seq_len(N)) {
-        indices <- j:N
-        k <- k + length(indices)
-        ibs <- 2 - abs(x[, indices, drop=FALSE] - y[,j])
-        mn[k-length(indices) + indices-(j-1)] <- colMeans(ibs, na.rm = na.rm)
-        s2[k-length(indices) + indices-(j-1)] <- colVars(as.matrix(ibs), na.rm = na.rm)
-
+        ibs <- 2 - abs(x[, j:N, drop=FALSE] - y[,j])
+        mn[k + 0:(N - j)] <- colMeans(ibs, na.rm = na.rm)
+        s2[k + 0:(N - j)] <- colVars(as.matrix(ibs), na.rm = na.rm)
+        k <- k + 1 +  N - j
         if( verbose & (j %% 100 == 0 | j == 1) )
             message(k, " of ", N*(N+1)/2, " (", round(100*k/(N*(N+1)/2), 2), "%) ...")
     }
-
-    data.frame(mean = mn,
-               var = s2,
-               colnames.x = unlist(sapply(1:N, function(k) colnames(x)[k:N])),
-               colnames.y = rep(colnames(y), N:1))
+    
+    data.frame(mean = mn, var = s2,
+               colnames.x = unlist(sapply(1:N, function(k) colnames(x)[k:N])), colnames.y = rep(colnames(y), N:1))
 }
 
 
@@ -277,6 +271,7 @@ alleleSharing <- function(x, y = NULL, relations = NULL, idx.col = "idx", idy.co
 ##' @author mvaniterson
 ##' @importFrom graphics contour legend plot points
 ##' @importFrom MASS lda
+##' @importFrom stats predict
 ##' @export
 ##' @examples
 ##' set.seed(12345)
@@ -293,7 +288,7 @@ inferRelations <- function(data, n = 100, plot.it = TRUE){
     data <- droplevels(data)
     model <- lda(relation~mean+var, data = data)
 
-    predicted <- MASS:::predict.lda(model, data)
+    predicted <- predict(model, data)
 
     data$predicted <- predicted$class
 
@@ -302,26 +297,32 @@ inferRelations <- function(data, n = 100, plot.it = TRUE){
     id <- which(data$predicted != data$relation)
 
     if( plot.it )
-        plot(data[, c("mean", "var")], pch = ".", cex = 3, col = as.integer(data$relation), xlab = "mean (IBS)", ylab = "variance (IBS)")
+        plot(data[, c("mean", "var")], pch = ".", cex = 3,
+             col = as.integer(data$relation),
+             xlab = "mean (IBS)", ylab = "variance (IBS)")
 
     xp <- seq(min(data$mean), max(data$mean), length = n)
     yp <- seq(min(data$var), max(data$var), length = n)
     grid <- expand.grid(mean = xp, var = yp)
-    predicted <- MASS:::predict.lda(model, grid)
+    predicted <- predict(model, grid)
     posterior <- predicted$posterior
 
     if( ncol(posterior) > 2 ) {
         for(k in seq_len(ncol(posterior))) {
             zp <- posterior[, k] - apply(posterior[,-k], 1, max)
-            contour(xp, yp, matrix(zp, n), add = TRUE, levels = 0, drawlabels = FALSE, lty = 1, lwd = 2, col = "grey")
+            contour(xp, yp, matrix(zp, n), add = TRUE, levels = 0,
+                    drawlabels = FALSE, lty = 1, lwd = 2, col = "grey")
         }
     } else {
         zp <- posterior[, 2] - pmax(posterior[, 1])
-        contour(xp, yp, matrix(zp, n), add = TRUE, levels = 0, drawlabels = FALSE, lty = 1, lwd = 2, col = "grey")
+        contour(xp, yp, matrix(zp, n), add = TRUE, levels = 0,
+                drawlabels = FALSE, lty = 1, lwd = 2, col = "grey")
     }
 
-    points(data[id, c("mean", "var")], pch = ".", cex = 3, col = as.integer(data$relation[id]))
-    legend("topright", paste("assumed", levels(data$relation)), col = 1:nlevels(data$relation), pch = 15, bty = "n")
+    points(data[id, c("mean", "var")], pch = ".", cex = 3,
+           col = as.integer(data$relation[id]))
+    legend("topright", paste("assumed", levels(data$relation)),
+           col = 1:nlevels(data$relation), pch = 15, bty = "n")
 
     invisible(data[id,])
 }
