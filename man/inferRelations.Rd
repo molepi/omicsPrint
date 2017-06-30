@@ -9,9 +9,11 @@ inferRelations(data, n = 100, plot.it = TRUE)
 \arguments{
 \item{data}{output from allelesharing}
 
-\item{n}{= 100 default interpolation for showing the classification boundaries}
+\item{n}{= 100 default interpolation for showing the
+classification boundaries}
 
-\item{plot.it}{= TRUE default plot classification graph}
+\item{plot.it}{= TRUE default plot classification graph and
+returing mismatches otherwise return all}
 }
 \value{
 predicted mismatches

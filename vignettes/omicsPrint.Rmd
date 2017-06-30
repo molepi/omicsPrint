@@ -172,6 +172,20 @@ mismatches
 Again providing the known and true relationships yield no
 missclassified sample relationships.
 
+# Custom ploting
+
+By setting the option `plot.it=FALSE` all data points are
+returned. Thise can be used for creating customized plots of the IBS
+mean and variance.
+
+```{r, inferrelations2, fig.cap = "Scatter-plot of IBS mean and variance customized. Sometimes it can be convient draw the plot yourself for adding addtional information, for example, sample-pairs."}
+data <- alleleSharing(x, , relations=relations)
+predicted <- inferRelations(data, plot.it=FALSE)
+pchs <- paste(predicted$colnames.x, predicted$colnames.y, sep="-")
+plot(predicted$mean, predicted$var, type="n")
+text(predicted$mean, predicted$var, pchs)
+```
+
 # SessionInfo #
 
 ```{r, sessioninfo}

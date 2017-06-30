@@ -54,7 +54,7 @@
         if( verbose & (j %% 100 == 0 | j == 1) )
             message(k, " of ", N*(N+1)/2, " (", round(100*k/(N*(N+1)/2), 2), "%) ...")
     }
-    
+
     data.frame(mean = mn, var = s2,
                colnames.x = unlist(sapply(1:N, function(k) colnames(x)[k:N])), colnames.y = rep(colnames(y), N:1))
 }
@@ -169,7 +169,7 @@
 ##' To improve the lookup of relations, which can be millions of say
 ##' 1000 samples are provided, a hash-table is created from the
 ##' provided data.frame with relations.
-##' 
+##'
 ##' @title allele sharing based on ibs
 ##' @param x genotype matrix with row and column names
 ##' @param y genotype matrix with row and column names
@@ -265,8 +265,10 @@ alleleSharing <- function(x, y = NULL, relations = NULL, idx.col = "idx", idy.co
 ##' this!
 ##' @title predict mismatches
 ##' @param data output from allelesharing
-##' @param n = 100 default interpolation for showing the classification boundaries
-##' @param plot.it = TRUE default plot classification graph
+##' @param n = 100 default interpolation for showing the
+##'     classification boundaries
+##' @param plot.it = TRUE default plot classification graph and
+##'     returing mismatches otherwise return all
 ##' @return predicted mismatches
 ##' @author mvaniterson
 ##' @importFrom graphics contour legend plot points
@@ -294,37 +296,43 @@ inferRelations <- function(data, n = 100, plot.it = TRUE){
 
     print(table(`Predicted relation` = data$predicted, `Assumed relation` = data$relation), zero.print = ".")
 
-    id <- which(data$predicted != data$relation)
 
-    if( plot.it )
+    if( plot.it ) {
+
+        id <- which(data$predicted != data$relation)
+
         plot(data[, c("mean", "var")], pch = ".", cex = 3,
              col = as.integer(data$relation),
              xlab = "mean (IBS)", ylab = "variance (IBS)")
 
-    xp <- seq(min(data$mean), max(data$mean), length = n)
-    yp <- seq(min(data$var), max(data$var), length = n)
-    grid <- expand.grid(mean = xp, var = yp)
-    predicted <- predict(model, grid)
-    posterior <- predicted$posterior
+        xp <- seq(min(data$mean), max(data$mean), length = n)
+        yp <- seq(min(data$var), max(data$var), length = n)
+        grid <- expand.grid(mean = xp, var = yp)
+        predicted <- predict(model, grid)
+        posterior <- predicted$posterior
 
-    if( ncol(posterior) > 2 ) {
-        for(k in seq_len(ncol(posterior))) {
-            zp <- posterior[, k] - apply(posterior[,-k], 1, max)
+        if( ncol(posterior) > 2 ) {
+            for(k in seq_len(ncol(posterior))) {
+                zp <- posterior[, k] - apply(posterior[,-k], 1, max)
+                contour(xp, yp, matrix(zp, n), add = TRUE, levels = 0,
+                        drawlabels = FALSE, lty = 1, lwd = 2, col = "grey")
+            }
+        } else {
+            zp <- posterior[, 2] - pmax(posterior[, 1])
             contour(xp, yp, matrix(zp, n), add = TRUE, levels = 0,
                     drawlabels = FALSE, lty = 1, lwd = 2, col = "grey")
         }
-    } else {
-        zp <- posterior[, 2] - pmax(posterior[, 1])
-        contour(xp, yp, matrix(zp, n), add = TRUE, levels = 0,
-                drawlabels = FALSE, lty = 1, lwd = 2, col = "grey")
+
+        points(data[id, c("mean", "var")], pch = ".", cex = 3,
+               col = as.integer(data$relation[id]))
+        legend("topright", paste("assumed", levels(data$relation)),
+               col = 1:nlevels(data$relation), pch = 15, bty = "n")
+
+        return(invisible(data[id,]))
     }
+    else
+        return(invisible(data))
 
-    points(data[id, c("mean", "var")], pch = ".", cex = 3,
-           col = as.integer(data$relation[id]))
-    legend("topright", paste("assumed", levels(data$relation)),
-           col = 1:nlevels(data$relation), pch = 15, bty = "n")
-
-    invisible(data[id,])
 }
 
 ##' convert DNA methylation beta-value to inferred genotypes
