@@ -1,0 +1,224 @@
+---
+title: "Verifying sample relationships using DNA Methylation data en Whole Genome Sequencing data"
+shorttitle: "Verifying sample relationships using beta-values"
+package: "omicsPrint"
+author:
+- name: "Maarten van Iterson"
+  affiliation:
+  - "Department of Medical Statistics and Bioinformatics, Section Moleculair Epidemiology, Leiden University Medical Center"
+  email: mviterson@gmail.com
+date: "`r Sys.Date()`"
+output:
+  BiocStyle::html_document2:
+    toc: true
+    toc_float:
+      collapsed: false
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: omicsPrint.bib
+---
+
+Here we will show how you could verify sample relationships on
+publicly available DNA methylation data and whole genome sequencing data.
+
+Here we use the beta-value matrix extracted from GEO (GSE39672). And
+collect 1000G genotypes for partially overlapping samples from
+[IGSR: The International Genome Sample Resource](http://www.internationalgenome.org/data/).
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval=FALSE)
+suppressPackageStartupMessages({
+    library(omicsPrint)
+    library(GEOquery)
+    library(DNAmArray) #see https://github.com/molepi/DNAmArray
+})
+```
+
+# Methylation Data #
+
+First we extract the data from GEO:
+
+```{r, downloaddata}
+library(GEOquery)
+gset <- getGEO("GSE39672", GSEMatrix=TRUE)
+gset
+betas <- exprs(gset[[1]])
+dim(betas)
+```
+
+Sample names can be extract from the `GEO`-object.
+
+```{r, extractphenotypes}
+samples <- gsub(".* ", "", pData(gset[[1]])$"title")
+colnames(betas) <- samples
+betas[1:5, 1:5]
+```
+
+Make a selection of CpGs probably polymorphic in the population:
+
+```{r, selectcpgs}
+library(DNAmArray)
+data(hm450.manifest.pop.GoNL)
+cpgs <- names(hm450.manifest.pop.GoNL[mcols(hm450.manifest.pop.GoNL)$MASK.snp5.CEU])
+```
+
+Convert the beta-values to genotypes:
+
+```{r, genotyping}
+library(omicsPrint)
+dnamCalls <- beta2genotype(betas[rownames(betas) %in% cpgs, ])
+dim(dnamCalls)
+dnamCalls[1:5, 1:5]
+```
+
+And perform the intra-omic allele sharing:
+
+```{r, allelesharing}
+data <- alleleSharing(dnamCalls)
+mismatches <- inferRelations(data)
+```
+
+There are no unknown relations in the data.
+
+
+# Genotype Data #
+
+Here is a helper-function for the extraction of genotypes from the
+1000G per chromosome vcf-files.
+
+```{r, genotypeextractor}
+getSnpMatrix <- function(chr, samples = NULL, which) {
+    require(VariantAnnotation)
+
+    message("Extracting SNPs for chromosome: ", chr)
+    
+    vcfFile <- paste0("ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chr", chr,
+                      ".phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz")
+
+    indexFile <-  paste0("ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chr", chr,
+                         ".phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz.tbi")
+
+    tabFile <- TabixFile(vcfFile, indexFile)
+
+    if(is.null(samples))
+        param <- ScanVcfParam(geno = "GT",
+                              which = which[seqnames(which) == chr])
+    else
+        param <- ScanVcfParam(geno = "GT",
+                              samples = samples,
+                              which = which[seqnames(which) == chr])
+
+    message("Reading vcf ...")
+    vcf <- readVcf(tabFile, "hg19", param = param)
+    
+    message("Transform to SnpMatrix ...")
+    m <- genotypeToSnpMatrix(vcf)$genotypes
+
+    ##debugging
+    ##message(str(m))
+    
+    m <- t(matrix(as.numeric(m),
+                  nrow = nrow(m),
+                  ncol = ncol(m),
+                  dimnames = dimnames(m)))
+    
+    rownames(m) <- paste(seqnames(vcf@rowRanges),
+                         start(vcf@rowRanges), sep=":")
+    m
+}
+```
+
+Extract genotypes from the vcf-files that are occuring in all
+populations:
+
+```{r, extractgenotypes}
+library(DNAmArray)
+data(hm450.manifest.pop.GoNL)
+
+snp5.pop <- as.data.frame(mcols(hm450.manifest.pop.GoNL)[,grepl("MASK.snp5.*$", colnames(mcols(hm450.manifest.pop.GoNL)))])
+
+gr <- hm450.manifest.pop.GoNL[rowSums(snp5.pop, na.rm=TRUE) == ncol(snp5.pop)]
+mcols(gr) <- NULL
+seqlevels(gr) <- mapSeqlevels(seqlevels(gr), "NCBI")
+gr
+##check one
+##dnaCalls <- getSnpMatrix(22, samples = samples, which=gr)
+##dim(dnaCalls)
+library(BiocParallel)
+register(MulticoreParam(22))
+dnaCalls <- bplapply(1:22, getSnpMatrix, samples = samples, which=gr)
+dnaCalls <- bplapply(1:22, getSnpMatrix, samples = NULL, which=gr)
+dnaCalls <- do.call('rbind', dnaCalls)
+dim(dnaCalls)
+dnaCalls[1:5, 1:5]
+```
+
+Select the most informative SNPs, e.g., we can calculate the minor
+allel frequenties and retain those above a certain threshold, i.e.,
+0.05.
+
+```{r, filtering}
+maf <- apply(dnaCalls, 1, function(x) min(table(x)/length(x)))
+hist(maf)
+dnaCalls <- dnaCalls[maf > 0.01 & maf < 1,]
+dim(dnaCalls)
+```
+
+Now we can run the allelesharing algorithm on the genotype data:
+
+```{r, allelesharing1}
+library(omicsPrint)
+data <- alleleSharing(dnaCalls)
+mismatches <- inferRelations(data)
+```
+
+# Genotype and Methylation Data #
+
+To be able to run the allele sharing algorithm between the DNA
+methylation and genotype data there should be overlapping SNPs. 
+
+Here we map probe identifiers to `chromosome:position`, like the
+genotype data using information for the array provider:
+
+```{r, renamecpgs}
+library(FDb.InfiniumMethylation.hg19)
+rngs <- getPlatform(platform='HM450', genome='hg19')
+seqlevels(rngs) <- mapSeqlevels(seqlevels(rngs), "NCBI")
+rngs
+
+map <- names(rngs)
+names(map) <- paste(seqnames(rngs),
+                    mcols(rngs)$probeTarget, sep=":")
+mid <- match(map, rownames(betas))
+rownames(betas)[mid] <- names(map)
+
+library(omicsPrint)
+dnamCalls <- beta2genotype(betas[rownames(betas) %in% rownames(dnaCalls),])
+dim(dnamCalls)
+data <- alleleSharing(dnamCalls, dnaCalls, phasing=TRUE)
+mismatches <- inferRelations(data)
+mismatches
+
+require(readxl)
+file <- tempfile(fileext=".ped")
+download.file("ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20130606_sample_info/20130606_g1k.ped", destfile=file)
+
+ped <- read.table(file, header=TRUE, sep="\t")
+subset(ped, Individual.ID == "NA19129")
+```
+
+Two pairs of genotype-DNAm seems not properly matching. I suspect bad
+quality of DNAm or genotypes! And one unrelated is parent offspring
+relation.
+
+
+# SessionInfo #
+
+```{r, sessioninfo}
+sessionInfo()
+```
+
+# Reference #

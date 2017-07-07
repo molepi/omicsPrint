@@ -53,6 +53,9 @@ gset <- getGEO("GSE52980", GSEMatrix = TRUE, getGPL=FALSE)
 idx <- grep("GPL13534", attr(gset, "names"))
 betas <- exprs(gset[[idx]])
 dim(betas)
+
+
+betas <- read.table("ftp://ftp.ncbi.nlm.nih.gov/geo/platforms/GPL13nnn/GPL13534/suppl/GPL13534%5FHumanMethylation450%5F15017482%5Fv%2E1%2E1%2Ecsv%2Egz")
 ```
 
 We need to preprocess the metadata a little to obtain a clear picture
