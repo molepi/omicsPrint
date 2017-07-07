@@ -73,8 +73,9 @@
 
     colnames.x <- gsub(":.*$", "", identical)
     colnames.y <- gsub("^.*:", "", identical)
-    colnames.x <- colnames.x[!grepl("NA", colnames.y)]
-    colnames.y <- colnames.y[!grepl("NA", colnames.y)]
+    
+    colnames.x <- colnames.x[!grepl("^NA$", colnames.y)]
+    colnames.y <- colnames.y[!grepl("^NA$", colnames.y)]
 
     keep <- colnames.x %in% colnames(x) & colnames.y %in% colnames(y)
     if( sum(keep) == 0 )
