@@ -1,6 +1,6 @@
 Package: omicsPrint
 Title: Cross omic genetic fingerprinting
-Version: 0.99.7
+Version: 0.99.8
 Authors@R: person("Maarten", "van Iterson", email ="mviterson@gmail.com", role = c("aut", "cre"))
 Description: omicsPrint provides functionality for cross omic genetic fingerprinting, for example, to verify sample relationships between multiple omics data types, i.e. genomic, transcriptomic and epigenetic (DNA methylation).
 Depends: R (>= 3.4), MASS

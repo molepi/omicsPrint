@@ -115,8 +115,11 @@
 }
 
 .constructRelations <- function(xnames, ynames, idx.col = "idx", idy.col = "idy", rel.col = "relation_type") {
-    if( !is.null(ynames) )
+    if( !is.null(ynames) ) {
+        if( length(intersect(xnames, ynames)) == 0 )
+            stop("There must be at least some overlapping samples!")
         relations <- expand.grid(idx = xnames, idy = ynames, stringsAsFactors = FALSE)
+        }
     else
         relations <- expand.grid(idx = xnames, idy = xnames)
     relations[,rel.col] <- "unrelated"
@@ -124,6 +127,7 @@
 
     relations[identical, rel.col] <- "identical"
     relations <- relations[relations[,rel.col] != "unrelated",]
+    
     rownames(relations) <- 1:nrow(relations)
     relations
 }

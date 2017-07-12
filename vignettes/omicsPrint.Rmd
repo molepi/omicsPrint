@@ -39,19 +39,18 @@ suppressPackageStartupMessages({
 
 Here we illustrate the use of the package using artificially generated
 data. A few other vignettes are available that show the use of the
-package on experimental data, i.e. 450k DNA methylation, RNAsequencing
-data and imputed genotypes.
+package on experimental data, i.e. 450k DNA methylation and genotype data.
 
 # Within omics sample relationship verification #
 
 ## Create toy data ##
 
 Here we generate a single vector with 100 randomly drawn integers from
-the set; 1, 2, 3, representing 100 SNP calls from a single
+the set: {1, 2, 3}, representing 100 SNP calls from a single
 individual. Three other samples are generated from this one by
 randomly swapping a certain fraction of the SNPs. For example,
 swapping only 5 SNPs only introduces some noise but should still
-reflect the same individual. However, swapping 50% of the SNPs is
+reflects the same individual. However, swapping 50% of the SNPs is
 similar to the difference in genotypes between parents and
 offspring. Swapping all SNPs will result in a unrelated individual.
 
@@ -144,7 +143,7 @@ Now there are no misclassified sample relations.
 The previous example showed how to perform sample relationship
 verification within an omics data type. If a second set of overlapping
 SNPs is available, obtained from a different omic type, for the same
-or related individuals sample relationshi verification can be run
+or related individuals sample relationship verification can be run
 between these two.
 
 ```{r, xyallelesharing, fig.cap = "Scatter-plot of IBS mean and variance with classification boundary. For pairwise comparison between the samples without specifying sample relationships."}
@@ -160,7 +159,7 @@ Notice pruning is performed on both data types and automatically the
 overlapping set of SNPs (80) is used, provided that the rownames
 between `x` and `y` are the same (Note also this holds for providing
 relations where the relation identifiers `idx` and `idy` should match
-with the columnames of `x` and `y`).
+with the column names of `x` and `y`).
 
 ```{r, addrelations2, fig.cap = "Scatter-plot of IBS mean and variance with classification boundaries. For pairwise comparison between the samples with specifying sample relationships."}
 data <- alleleSharing(x, y, relations)
@@ -179,7 +178,7 @@ returned. Thise can be used for creating customized plots of the IBS
 mean and variance.
 
 ```{r, inferrelations2, fig.cap = "Scatter-plot of IBS mean and variance customized. Sometimes it can be convient draw the plot yourself for adding addtional information, for example, sample-pairs."}
-data <- alleleSharing(x, , relations=relations)
+data <- alleleSharing(x, y, relations=relations)
 predicted <- inferRelations(data, plot.it=FALSE)
 pchs <- paste(predicted$colnames.x, predicted$colnames.y, sep="-")
 plot(predicted$mean, predicted$var, type="n")

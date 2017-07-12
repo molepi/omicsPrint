@@ -43,17 +43,17 @@ First we extract the data from GEO:
 
 ```{r, downloaddata}
 library(GEOquery)
-gset <- getGEO("GSE39672", GSEMatrix=TRUE)
+gset <- getGEO("GSE39672", GSEMatrix=TRUE) ##no clear link between na/hg numbers
 gset
-betas <- exprs(gset[[1]])
+betas <- exprs(gset[[1]]) 
 dim(betas)
 ```
 
 Sample names can be extract from the `GEO`-object.
 
 ```{r, extractphenotypes}
-samples <- gsub(".* ", "", pData(gset[[1]])$"title")
-colnames(betas) <- samples
+population <- gsub("^.* ", "", pData(gset[[1]])$characteristics_ch1)
+colnames(betas) <- gsub("^.* ", "", pData(gset[[1]])$title)
 betas[1:5, 1:5]
 ```
 
@@ -62,7 +62,8 @@ Make a selection of CpGs probably polymorphic in the population:
 ```{r, selectcpgs}
 library(DNAmArray)
 data(hm450.manifest.pop.GoNL)
-cpgs <- names(hm450.manifest.pop.GoNL[mcols(hm450.manifest.pop.GoNL)$MASK.snp5.CEU])
+cpgs <- names(hm450.manifest.pop.GoNL[mcols(hm450.manifest.pop.GoNL)$MASK.snp5.CEU
+                                      | mcols(hm450.manifest.pop.GoNL)$MASK.snp5.YRI])
 ```
 
 Convert the beta-values to genotypes:
@@ -137,10 +138,9 @@ populations:
 ```{r, extractgenotypes}
 library(DNAmArray)
 data(hm450.manifest.pop.GoNL)
+gr <- hm450.manifest.pop.GoNL[mcols(hm450.manifest.pop.GoNL)$MASK.snp5.CEU
+                                      | mcols(hm450.manifest.pop.GoNL)$MASK.snp5.YRI]
 
-snp5.pop <- as.data.frame(mcols(hm450.manifest.pop.GoNL)[,grepl("MASK.snp5.*$", colnames(mcols(hm450.manifest.pop.GoNL)))])
-
-gr <- hm450.manifest.pop.GoNL[rowSums(snp5.pop, na.rm=TRUE) == ncol(snp5.pop)]
 mcols(gr) <- NULL
 seqlevels(gr) <- mapSeqlevels(seqlevels(gr), "NCBI")
 gr
@@ -149,7 +149,7 @@ gr
 ##dim(dnaCalls)
 library(BiocParallel)
 register(MulticoreParam(22))
-dnaCalls <- bplapply(1:22, getSnpMatrix, samples = samples, which=gr)
+##dnaCalls <- bplapply(1:22, getSnpMatrix, samples = colnames(dnamCalls), which=gr)
 dnaCalls <- bplapply(1:22, getSnpMatrix, samples = NULL, which=gr)
 dnaCalls <- do.call('rbind', dnaCalls)
 dim(dnaCalls)
@@ -213,6 +213,36 @@ subset(ped, Individual.ID == "NA19129")
 Two pairs of genotype-DNAm seems not properly matching. I suspect bad
 quality of DNAm or genotypes! And one unrelated is parent offspring
 relation.
+
+# Detect mislabelled samples #
+
+In order to show how mislabelled samples can be detected some
+mislabeling is artificially introduced, i.e. a known `identical`
+relation is removed and `unrelated` pair is set to identical.
+
+```{r, allelesharing2}
+set.seed(12345)
+relations <- expand.grid(idx = colnames(dnamCalls), idy = colnames(dnaCalls))
+relations$relation_type <- "unrelated"
+relations$relation_type[as.character(relations$idx) == as.character(relations$idy)] <- "identical"
+
+id <- sample(which(relations$relation_type == "identical"), 1)
+relations[id,]
+relations$relation_type[id] <- "unrelated"
+
+id <- sample(which(relations$relation_type == "unrelated"), 1)
+relations[id,]
+relations$relation_type[id] <- "identical"
+relations <- relations[relations$relation_type == "identical",]
+
+library(omicsPrint)
+data <- alleleSharing(dnamCalls, dnaCalls, relations=relations, phasing=TRUE)
+mismatches <- inferRelations(data)
+mismatches
+```
+
+
+
 
 
 # SessionInfo #
