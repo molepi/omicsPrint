@@ -1,7 +1,12 @@
 ---
 title: "Verifying sample relationships using DNA Methylation data en Whole Genome Sequencing data"
-shorttitle: "Verifying sample relationships using beta-values"
 package: "omicsPrint"
+abstract: 
+  Here we will show how you could verify sample relationships on
+  publicly available DNA methylation data and whole genome sequencing
+  data. We use the beta-value matrix extracted from GEO (GSE39672) and
+  collect 1000G genotypes for partially overlapping samples from
+  [IGSR: The International Genome Sample Resource](http://www.internationalgenome.org/data/).
 author:
 - name: "Maarten van Iterson"
   affiliation:
@@ -26,16 +31,8 @@ vignette: >
 bibliography: omicsPrint.bib
 ---
 
-Here we will show how you could verify sample relationships on
-publicly available DNA methylation data and whole genome sequencing data.
-
-Here we use the beta-value matrix extracted from GEO (GSE39672). And
-collect 1000G genotypes for partially overlapping samples from
-[IGSR: The International Genome Sample Resource](http://www.internationalgenome.org/data/).
-
-
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(eval=FALSE)
+knitr::opts_chunk$set(eval=FALSE, cache=TRUE)
 suppressPackageStartupMessages({
     library(omicsPrint)
     library(GEOquery)
@@ -45,25 +42,39 @@ suppressPackageStartupMessages({
 
 # Methylation Data #
 
-First we extract the data from GEO:
+First we extract the data from GEO using the
+[*GEOquery*](http://bioconductor.org/packages/GEOquery/)-package and
+beta-values are extracted using the `exprs`-function:
 
 ```{r, downloaddata}
 library(GEOquery)
-gset <- getGEO("GSE39672", GSEMatrix=TRUE) ##no clear link between na/hg numbers
+gset <- getGEO("GSE39672", GSEMatrix=TRUE) 
 gset
 betas <- exprs(gset[[1]]) 
 dim(betas)
 ```
 
-Sample names can be extract from the `GEO`-object.
+Sample names can be extract from the `gse`-object using the
+`pData`-function:
 
 ```{r, extractphenotypes}
 population <- gsub("^.* ", "", pData(gset[[1]])$characteristics_ch1)
+table(population)
 colnames(betas) <- gsub("^.* ", "", pData(gset[[1]])$title)
 betas[1:5, 1:5]
 ```
 
-Make a selection of CpGs probably polymorphic in the population:
+If we would have had the raw idats we could extract the 65
+SNPs. However, experiences show that the 65 SNPs available on the
+array are not enough to perform sample verification with high
+confidence. Fortunately, several probes on the array contain SNPs
+occuring frequently in different populations[@Chen2013; @Zhou2016]. 
+
+We have made the data available from the package
+[*DNAmArray*](https://github.com/molepi/omicsPrint).
+
+Now we make a selection of CpGs probably affected by polymorphic SNPS
+in these two populations:
 
 ```{r, selectcpgs}
 library(DNAmArray)
@@ -72,7 +83,8 @@ cpgs <- names(hm450.manifest.pop.GoNL[mcols(hm450.manifest.pop.GoNL)$MASK.snp5.C
                                       | mcols(hm450.manifest.pop.GoNL)$MASK.snp5.YRI])
 ```
 
-Convert the beta-values to genotypes:
+Next the beta-values are converted to genotypes using our enhanced
+K-means algorithm:
 
 ```{r, genotyping}
 library(omicsPrint)
@@ -81,20 +93,30 @@ dim(dnamCalls)
 dnamCalls[1:5, 1:5]
 ```
 
-And perform the intra-omic allele sharing:
+The DNA methylation based genotype calls can directly supplied to the
+allelesharing algorithm to perform the intra-omic sample matching:
 
 ```{r, allelesharing}
 data <- alleleSharing(dnamCalls)
 mismatches <- inferRelations(data)
 ```
 
-There are no unknown relations in the data.
+There are no unknown relations in the data, verifying @Moen2013, as
+all samples should be unrelated.
 
 
 # Genotype Data #
 
+
+Since the sample used in this study (GSE39672) are overlapping with
+the HapMap and 1000G samples we can extract the whole genome
+sequencing derived genotypes.
+
 Here is a helper-function for the extraction of genotypes from the
-1000G per chromosome vcf-files.
+1000G per chromosome vcf-files using the
+[*VariantAnnotation*](https://bioconductor.org/packages/VariantAnnotation)-package.
+Furthermore, we use the `genotypeToSnpMatrix`-function to convert
+genotypes that we directly can use in the allelesharing algorithm.
 
 ```{r, genotypeextractor}
 getSnpMatrix <- function(chr, samples = NULL, which) {
@@ -139,7 +161,15 @@ getSnpMatrix <- function(chr, samples = NULL, which) {
 ```
 
 Extract genotypes from the vcf-files that are occuring in all
-populations:
+populations. Optionally you could extract only those that overlap with
+the DNA methylation data by suppling the `sample`-names. Now we use a
+`GenomicRange`-object to specify specifically which SNPs we would like
+to extract.
+
+This extraction can take some time. We run this on a multi-core
+machine using 22 cores in combination with the
+[*BiocParallel*](https://bioconductor.org/packages/BiocParallel)-package.
+
 
 ```{r, extractgenotypes}
 library(DNAmArray)
@@ -162,9 +192,9 @@ dim(dnaCalls)
 dnaCalls[1:5, 1:5]
 ```
 
-Select the most informative SNPs, e.g., we can calculate the minor
+To select the most informative SNPs, e.g., we can calculate the minor
 allel frequenties and retain those above a certain threshold, i.e.,
-0.05.
+0.01 and drop uninformative ones.
 
 ```{r, filtering}
 maf <- apply(dnaCalls, 1, function(x) min(table(x)/length(x)))
@@ -179,21 +209,28 @@ Now we can run the allelesharing algorithm on the genotype data:
 library(omicsPrint)
 data <- alleleSharing(dnaCalls)
 mismatches <- inferRelations(data)
+mismatches
 ```
+
+A few possibly family relations seems to appear around mean IBS of 1.8
+and variance 0.15. 
 
 # Genotype and Methylation Data #
 
 To be able to run the allele sharing algorithm between the DNA
-methylation and genotype data there should be overlapping SNPs. 
+methylation and genotype data there should be an overlapping set of
+SNPs.
 
 Here we map probe identifiers to `chromosome:position`, like the
-genotype data using information for the array provider:
+genotype data using information for the array provider available from
+the
+[*FDb.InfiniumMethylation.hg19*](https://bioconductor.org/packages/FDb.InfiniumMethylation.hg19)-package,
+and rename to probes.
 
 ```{r, renamecpgs}
 library(FDb.InfiniumMethylation.hg19)
 rngs <- getPlatform(platform='HM450', genome='hg19')
 seqlevels(rngs) <- mapSeqlevels(seqlevels(rngs), "NCBI")
-rngs
 
 map <- names(rngs)
 names(map) <- paste(seqnames(rngs),
@@ -218,7 +255,8 @@ subset(ped, Individual.ID == "NA19129")
 
 Two pairs of genotype-DNAm seems not properly matching. I suspect bad
 quality of DNAm or genotypes! And one unrelated is parent offspring
-relation.
+relation, for example, this is verified by information from the
+pedigree file.
 
 # Detect mislabelled samples #
 
@@ -247,8 +285,7 @@ mismatches <- inferRelations(data)
 mismatches
 ```
 
-
-
+These mislabel samples (pairs) are automatically detected.
 
 
 # SessionInfo #
