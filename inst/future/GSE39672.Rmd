@@ -99,11 +99,18 @@ allelesharing algorithm to perform the intra-omic sample matching:
 ```{r, allelesharing}
 data <- alleleSharing(dnamCalls)
 mismatches <- inferRelations(data)
+nrow(data) ##number of pairs
+ncol(dnamCalls) ##identical
+ncol(dnamCalls)*(ncol(dnamCalls) - 1)/2 ##non-identical
+ncol(dnamCalls)*(ncol(dnamCalls) + 1)/2 ##total
 ```
 
 There are no unknown relations in the data, verifying @Moen2013, as
 all samples should be unrelated.
 
+> NOTE: the number just represent the number of diagonal elements,
+> off-diagonal (upper or lower) and diagonal + off-diagonal
+> (upper/lower) of the square matrix with sample identifiers.
 
 # Genotype Data #
 
@@ -210,9 +217,13 @@ library(omicsPrint)
 data <- alleleSharing(dnaCalls)
 mismatches <- inferRelations(data)
 mismatches
+nrow(data) ##number of pairs
+ncol(dnaCalls) ##identical
+ncol(dnaCalls)*(ncol(dnaCalls) - 1)/2 ##non-identical
+ncol(dnaCalls)*(ncol(dnaCalls) + 1)/2 ##total
 ```
 
-A few possibly family relations seems to appear around mean IBS of 1.8
+Three possible family relations seems to appear around mean IBS of 1.8
 and variance 0.15. 
 
 # Genotype and Methylation Data #
@@ -241,9 +252,13 @@ rownames(betas)[mid] <- names(map)
 library(omicsPrint)
 dnamCalls <- beta2genotype(betas[rownames(betas) %in% rownames(dnaCalls),])
 dim(dnamCalls)
+dim(dnaCalls)
+
 data <- alleleSharing(dnamCalls, dnaCalls, phasing=TRUE)
 mismatches <- inferRelations(data)
 mismatches
+
+##ncol(dnamCalls) * ncol(dnaCalls) ## now the matrix is rectangular
 
 require(readxl)
 file <- tempfile(fileext=".ped")
@@ -253,10 +268,13 @@ ped <- read.table(file, header=TRUE, sep="\t")
 subset(ped, Individual.ID == "NA19129")
 ```
 
-Two pairs of genotype-DNAm seems not properly matching. I suspect bad
-quality of DNAm or genotypes! And one unrelated is parent offspring
-relation, for example, this is verified by information from the
-pedigree file.
+There are 103 overlapping samples between DNA and DNAm. Three pairs of
+DNA-DNAm seems not properly matching. I suspect bad quality of DNAm or
+DNA! And one unrelated is parent offspring relation, for example, this
+is verified by information from the pedigree file. Using imputed DNA
+genotypes will increase the number of SNPs overlapping with the DNA
+methylation data. Further, note that no quality control was performed
+on the DNAm data (we only have access to the beta-values).
 
 # Detect mislabelled samples #
 
@@ -286,6 +304,44 @@ mismatches
 ```
 
 These mislabel samples (pairs) are automatically detected.
+
+# Customized plots #
+
+Here we show some examples for creating customized plots of the mean
+and variance of IBS:
+
+
+```{r, customized}
+data <- alleleSharing(dnaCalls)
+plotdata <- inferRelations(data, plot.it=FALSE)
+
+ped <- read.table("ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20130606_sample_info/20130606_g1k.ped", header=TRUE, sep="\t")
+
+plotdata$population.x <- plotdata$population.y <- "unknown"
+mid <- match(plotdata$colnames.x, ped$Individual.ID)
+plotdata$population.x <- ped$Population[mid]
+mid <- match(plotdata$colnames.y, ped$Individual.ID)
+plotdata$population.y <- ped$Population[mid]
+
+colors <- factor(paste(plotdata$population.x, plotdata$population.y, sep="-"))
+levels(colors)
+table(colors)
+library(RColorBrewer)
+levels(colors) <- colorRampPalette(brewer.pal(12,"Set3"))(403)
+ 
+with(plotdata, 
+     plot(mean, var, pch=".", col=as.character(colors))
+     )
+
+##high light some pairs
+with(plotdata, {
+     plot(mean, var, pch=".")
+     id <- var < 0.2 & var > 0.1     
+     text(jitter(mean[id], 2), jitter(var[id], 2),
+          labels=paste(plotdata$colnames.x[id], plotdata$colnames.y[id], sep="-"))
+     })
+
+```
 
 
 # SessionInfo #
