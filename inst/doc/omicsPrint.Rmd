@@ -24,11 +24,12 @@ output:
     toc_float:
       collapsed: false
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Verifying sample relationships using genotypes or inferred genotypes}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 bibliography: omicsPrint.bib
 ---
+
 
 ```{r setup, include=FALSE}
 suppressPackageStartupMessages({
