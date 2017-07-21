@@ -2,11 +2,11 @@
 title: "Verifying sample relationships using DNA Methylation data en Whole Genome Sequencing data"
 package: "omicsPrint"
 abstract: 
-  Here we will show how you could verify sample relationships on
+  "Here we will show how you could verify sample relationships on
   publicly available DNA methylation data and whole genome sequencing
   data. We use the beta-value matrix extracted from GEO (GSE39672) and
   collect 1000G genotypes for partially overlapping samples from
-  [IGSR: The International Genome Sample Resource](http://www.internationalgenome.org/data/).
+  [IGSR: The International Genome Sample Resource](http://www.internationalgenome.org/data/)."
 author:
 - name: "Maarten van Iterson"
   affiliation:
@@ -18,16 +18,9 @@ output:
     toc: true
     toc_float:
       collapsed: false
-  pdf_document:
+  BiocStyle::pdf_document2:
     toc: true
     toc_depth: 2	
-  github_document:
-    toc: true
-    toc_depth: 2	
-vignette: >
-  %\VignetteIndexEntry{Vignette Title}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
 bibliography: omicsPrint.bib
 ---
 
