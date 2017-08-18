@@ -36,4 +36,17 @@ R CMD build omicsPrint
 R CMD INSTALL omicsPrint_x.y.z.tar.gz
 ```
 Change `_x.y.z.` to the proper version you downloaded!
+
+## Vignettes ##
+
+A few vignettes are provides showing applications of using **omicsPrint** to simulated and publicly available data:
+
+- [omicsPrint](http://htmlpreview.github.io/?https://raw.githubusercontent.com/molepi/omicsPrint/master/inst/doc/omicsPrint.html)
+
+- [GSE39672](http://htmlpreview.github.io/?https://raw.githubusercontent.com/molepi/omicsPrint/master/inst/doc/GSE39672.html)
+
+- [GSE52980](http://htmlpreview.github.io/?https://raw.githubusercontent.com/molepi/omicsPrint/master/inst/doc/GSE52980.html)
+
+
+
     
