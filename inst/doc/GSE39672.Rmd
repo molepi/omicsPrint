@@ -298,7 +298,7 @@ Here we show some examples for creating customized plots of the mean
 and variance of IBS:
 
 
-```{r, customized}
+```{r, customized, eval=FALSE}
 data <- alleleSharing(dnaCalls)
 plotdata <- inferRelations(data, plot.it=FALSE)
 
@@ -325,15 +325,15 @@ with(plotdata, {
     legend("topright", levels(labels), col=levels(colors), pch=18, bty="n")
      })
 
-with(plotdata, {
-    id <- which(predicted != relation)
+## with(plotdata, {
+##     id <- which(predicted != relation)
     
-    levels(relation) <- c("black", "red")
+##     levels(relation) <- c("black", "red")
 
-    plot(mean, var, pch=18, col=adjustcolor(relation, alpha.f = 0.3),
-         xlab="mean (IBS)", ylab="variance (IBS)")
-    points(mean[id], var[id], pch=18, col=relation[id])    
-     })
+##     plot(mean, var, pch=18, col=adjustcolor(relation, alpha.f = 0.3),
+##          xlab="mean (IBS)", ylab="variance (IBS)")
+##     points(mean[id], var[id], pch=18, col=relation[id])    
+##      })
 
 ```
 
