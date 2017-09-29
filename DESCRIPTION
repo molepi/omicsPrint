@@ -1,14 +1,20 @@
 Package: omicsPrint
 Title: Cross omic genetic fingerprinting
 Version: 0.99.13
-Authors@R: person("Maarten", "van Iterson", email ="mviterson@gmail.com", role = c("aut", "cre"))
-Description: omicsPrint provides functionality for cross omic genetic fingerprinting, for example, to verify sample relationships between multiple omics data types, i.e. genomic, transcriptomic and epigenetic (DNA methylation).
+Authors@R: person("Maarten", "van Iterson", email ="mviterson@gmail.com", 
+	role = c("aut", "cre"))
+Description: omicsPrint provides functionality for cross omic genetic 
+	fingerprinting, for example, to verify sample relationships between
+	multiple omics data types, i.e. genomic, transcriptomic and epigenetic
+	(DNA methylation).
 Depends: R (>= 3.4), MASS
-Imports: matrixStats, graphics, stats
+Imports: matrixStats, graphics, stats, SummarizedExperiment,
+	MultiAssayExperiment, RaggedExperiment
 Suggests: BiocStyle, knitr, rmarkdown, testthat
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
-biocViews: QualityControl, Genetics, Epigenetics, Transcriptomics, DNAMethylation, Transcription, GeneticVariability
+biocViews: QualityControl, Genetics, Epigenetics, Transcriptomics, 
+	DNAMethylation, Transcription, GeneticVariability
 VignetteBuilder: knitr

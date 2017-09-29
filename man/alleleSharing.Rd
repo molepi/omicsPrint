@@ -6,12 +6,13 @@
 \usage{
 alleleSharing(x, y = NULL, relations = NULL, idx.col = "idx",
   idy.col = "idy", rel.col = "relation_type", callRate = 0.95,
-  coverageRate = 2/3, phasing = FALSE, verbose = TRUE)
+  coverageRate = 2/3, phasing = FALSE, assayNameX = NULL,
+  assayNameY = NULL, verbose = TRUE)
 }
 \arguments{
-\item{x}{genotype matrix with row and column names}
-
-\item{y}{genotype matrix with row and column names}
+\item{x, y}{genotype matrix with row and column names; if this is a 
+SummarizedExperiment or a MultiAssayExperiment assayName must 
+also be specified.}
 
 \item{relations}{'data.frame' with relations and their mapping
 identifiers, provide columns if different from the default and
@@ -31,6 +32,11 @@ threshold are dropped}
 SNPs called are set to NA}
 
 \item{phasing}{default FALSE}
+
+\item{assayNameX}{the name of the assay to be used for x (see x,y)}
+
+\item{assayNameY}{same as assayNameX, but for y; if y is not 
+specified, the assay will be retreived from x.}
 
 \item{verbose}{show progress default TRUE}
 }

@@ -5,10 +5,12 @@
 \title{converts beta-values to genotypes (1, 2 and 3)}
 \usage{
 beta2genotype(betas, na.rm = TRUE, minSep = 0.25, minSize = 5,
-  centers = c(0.2, 0.5, 0.8))
+  centers = c(0.2, 0.5, 0.8), assayName = NULL)
 }
 \arguments{
-\item{betas}{beta matrix of probes possibly affected SNPs}
+\item{betas}{beta matrix of probes possibly affected SNPs; if this is a 
+SummarizedExperiment or a MultiAssayExperiment assayName must also be 
+specified}
 
 \item{na.rm}{TRUE drop cpg for which no clustering was observed}
 
@@ -17,6 +19,8 @@ beta2genotype(betas, na.rm = TRUE, minSep = 0.25, minSize = 5,
 \item{minSize}{size of smallest cluster (in percentage)}
 
 \item{centers}{center of clusters, defaults to 0.2, 0.5, 0.8.}
+
+\item{assayName}{the name of the assay to be used (see betas)}
 }
 \value{
 matrix with genotypes
