@@ -8,7 +8,7 @@ Description: omicsPrint provides functionality for cross omic genetic
 	multiple omics data types, i.e. genomic, transcriptomic and epigenetic
 	(DNA methylation).
 Depends: R (>= 3.4), MASS
-Imports: matrixStats, graphics, stats, SummarizedExperiment,
+Imports: methods, matrixStats, graphics, stats, SummarizedExperiment,
 	MultiAssayExperiment, RaggedExperiment
 Suggests: BiocStyle, knitr, rmarkdown, testthat
 License: GPL (>= 2)

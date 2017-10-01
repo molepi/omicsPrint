@@ -203,6 +203,7 @@
 ##' @importFrom SummarizedExperiment assays
 ##' @importFrom MultiAssayExperiment assays
 ##' @importFrom RaggedExperiment compactAssay
+##' @importFrom methods extends
 ##' @export
 ##' @examples
 ##' set.seed(12345)
@@ -408,6 +409,7 @@ inferRelations <- function(data, n = 100, plot.it = TRUE){
 ##' @importFrom stats kmeans
 ##' @importFrom SummarizedExperiment assays
 ##' @importFrom MultiAssayExperiment assays
+##' @importFrom methods extends
 ##' @export
 ##' @examples
 ##' set.seed(12345)
