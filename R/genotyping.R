@@ -179,10 +179,10 @@
 ##' @title allele sharing based on ibs
 ##' @param x,y genotype matrix with row and column names; if this is a 
 ##'     SummarizedExperiment or a MultiAssayExperiment assayName must 
-##'     also be specified.
+##'     also be specified
 ##' @param relations 'data.frame' with relations and their mapping
 ##'     identifiers, provide columns if different from the default and
-##'     beware identifiers should match with colnames of x and y.
+##'     beware identifiers should match with colnames of x and y
 ##' @param idx.col column name containing mapping identifiers
 ##' @param idy.col column name containing mapping identifiers
 ##' @param rel.col column name containing the relations,
@@ -192,9 +192,9 @@
 ##' @param coverageRate default 2/3 samples with less then threshold
 ##'     SNPs called are set to NA
 ##' @param phasing default FALSE
-##' @param assayNameX the name of the assay to be used for x (see x,y)
+##' @param assayNameX the name of the assay to be used for x (see x, y)
 ##' @param assayNameY same as assayNameX, but for y; if y is not 
-##'     specified, the assay will be retreived from x.
+##'     specified, the assay will be retreived from x
 ##' @param verbose show progress default TRUE
 ##' @return data.frame with mean and variance ibs between all pairs
 ##' @author mvaniterson
@@ -219,34 +219,34 @@ alleleSharing <- function(x, y = NULL, relations = NULL, idx.col = "idx",
                           callRate = 0.95, coverageRate = 2/3, 
                           phasing = FALSE, assayNameX = NULL,
                           assayNameY = NULL, verbose = TRUE) {
-    if(!is.null(y)) { #if y is given
+    if(!is.null(y)) {
         
         if(extends(class(y), "SummarizedExperiment") | 
-           extends(class(y), "MultiAssayExperiment")) { #and is an SE or MAE
+           extends(class(y), "MultiAssayExperiment")) {
             
             if(is.null(assayNameY))
-                stop("Assay name should be given!") #assayNameY must be specified
+                stop("Assay name should be given!")
             
-            y <- assays(y)[[assayNameY]] #so the proper assay can be retrieved and used as genotype matrix for y
+            y <- assays(y)[[assayNameY]]
             
-        } else if (extends(class(y), "RaggedExperiment")) #if its an RE
-            y <- compactAssay(y) #generate the compact assay for use as y
+        } else if (extends(class(y), "RaggedExperiment"))
+            y <- compactAssay(y)
         
-    } else if (!is.null(assayNameY)) #if y is not given but assayNameY is
-        y <- assays(x)[[assayNameY]] #retrieve the specified assay from x to be used as genotype matrix for y
+    } else if (!is.null(assayNameY))
+        y <- assays(x)[[assayNameY]]
     
     if(extends(class(x), "SummarizedExperiment") | 
-       extends(class(x), "MultiAssayExperiment")) { #if x is an Se or MAE
+       extends(class(x), "MultiAssayExperiment")) {
         
         if(is.null(assayNameX))
-            stop("Assay name should be given!") #assayNameX must be specified
+            stop("Assay name should be given!")
         
-        x <- assays(x)[[assayNameX]] #so the proper assay can be retrieved and used as genotype matrix for x
+        x <- assays(x)[[assayNameX]]
         
-    } else if (extends(class(x), "RaggedExperiment")) #if its an RE
-        x <- compactAssay(x) #generate the compact assay for use as x
+    } else if (extends(class(x), "RaggedExperiment"))
+        x <- compactAssay(x)
     
-    if(is.null(colnames(x))) #then continue as is nothing happened....
+    if(is.null(colnames(x)))
         stop("Colnames should be given!")
     
     if (!is.null(y) & is.null(colnames(y)))
@@ -420,12 +420,12 @@ inferRelations <- function(data, n = 100, plot.it = TRUE){
 beta2genotype <- function (betas, na.rm = TRUE, minSep = 0.25, minSize = 5, 
                            centers = c(0.2, 0.5, 0.8), assayName = NULL) {
     if(extends(class(betas), "SummarizedExperiment") |
-       extends(class(betas), "MultiAssayExperiment")) { #if betas is an SE or MAE
+       extends(class(betas), "MultiAssayExperiment")) { 
         
         if(is.null(assayName))
-            stop("Assay name should be given!") #assayName must be given
+            stop("Assay name should be given!")
         
-        betas <- assays(betas)[[assayName]] #so the specified assay can be retrieved and used as betas
+        betas <- assays(betas)[[assayName]]
     }
     
     genotypes <- apply(betas, 1, function(x) {
