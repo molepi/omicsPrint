@@ -12,11 +12,11 @@ alleleSharing(x, y = NULL, relations = NULL, idx.col = "idx",
 \arguments{
 \item{x, y}{genotype matrix with row and column names; if this is a 
 SummarizedExperiment or a MultiAssayExperiment assayName must 
-also be specified.}
+also be specified}
 
 \item{relations}{'data.frame' with relations and their mapping
 identifiers, provide columns if different from the default and
-beware identifiers should match with colnames of x and y.}
+beware identifiers should match with colnames of x and y}
 
 \item{idx.col}{column name containing mapping identifiers}
 
@@ -33,10 +33,10 @@ SNPs called are set to NA}
 
 \item{phasing}{default FALSE}
 
-\item{assayNameX}{the name of the assay to be used for x (see x,y)}
+\item{assayNameX}{the name of the assay to be used for x (see x, y)}
 
 \item{assayNameY}{same as assayNameX, but for y; if y is not 
-specified, the assay will be retreived from x.}
+specified, the assay will be retreived from x}
 
 \item{verbose}{show progress default TRUE}
 }
