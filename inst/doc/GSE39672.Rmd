@@ -26,7 +26,7 @@ knitr::opts_chunk$set(eval=TRUE, cache=TRUE)
 suppressPackageStartupMessages({
     library(omicsPrint)
     library(GEOquery)
-    library(DNAmArray) #see https://github.com/molepi/DNAmArray
+    library(GenomicRanges)
 })
 ```
 
@@ -60,14 +60,15 @@ array are not enough to perform sample verification with high
 confidence. Fortunately, several probes on the array contain SNPs
 occuring frequently in different populations[@Chen2013; @Zhou2016]. 
 
-We have made the data available from the package
-[*DNAmArray*](https://github.com/molepi/omicsPrint).
+We have made the data available from inside of this package package in a 
+`GRanges`-object.
 
 Now we make a selection of CpGs probably affected by polymorphic SNPS
 in these two populations:
 
 ```{r, selectcpgs}
-library(DNAmArray)
+library(omicsPrint)
+library(GenomicRanges)
 data(hm450.manifest.pop.GoNL)
 cpgs <- names(hm450.manifest.pop.GoNL[mcols(hm450.manifest.pop.GoNL)$MASK.snp5.CEU
                                       | mcols(hm450.manifest.pop.GoNL)$MASK.snp5.YRI])
@@ -77,7 +78,6 @@ Next the beta-values are converted to genotypes using our enhanced
 K-means algorithm:
 
 ```{r, genotyping}
-library(omicsPrint)
 dnamCalls <- beta2genotype(betas[rownames(betas) %in% cpgs, ])
 dim(dnamCalls)
 dnamCalls[1:5, 1:5]
@@ -164,26 +164,25 @@ the DNA methylation data by suppling the `sample`-names. Now we use a
 to extract.
 
 This extraction can take some time. We run this on a multi-core
-machine using 22 cores in combination with the
+machine using 6 cores in combination with the
 [*BiocParallel*](https://bioconductor.org/packages/BiocParallel)-package.
 
 
 ```{r, extractgenotypes}
-library(DNAmArray)
 data(hm450.manifest.pop.GoNL)
 gr <- hm450.manifest.pop.GoNL[mcols(hm450.manifest.pop.GoNL)$MASK.snp5.CEU
                                       | mcols(hm450.manifest.pop.GoNL)$MASK.snp5.YRI]
 
 mcols(gr) <- NULL
 seqlevels(gr) <- mapSeqlevels(seqlevels(gr), "NCBI")
-gr
+gr[1]
 ##check one
 ##dnaCalls <- getSnpMatrix(22, samples = samples, which=gr)
 ##dim(dnaCalls)
 library(BiocParallel)
-register(MulticoreParam(22))
-dnaCalls <- bplapply(1:22, getSnpMatrix, samples = colnames(dnamCalls), which=gr)
-##dnaCalls <- bplapply(1:22, getSnpMatrix, samples = NULL, which=gr)
+register(MulticoreParam(6))
+dnaCalls <- bplapply(1:6, getSnpMatrix, samples = colnames(dnamCalls), which=gr[1])
+##dnaCalls <- bplapply(1:6, getSnpMatrix, samples = NULL, which=gr)
 dnaCalls <- do.call('rbind', dnaCalls)
 dim(dnaCalls)
 dnaCalls[1:5, 1:5]

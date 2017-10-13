@@ -37,6 +37,9 @@ bibliography: omicsPrint.bib
 
 ```{r setup, include=FALSE}
 set.seed(22062017)
+library(omicsPrint)
+library(GEOquery)
+library(SummarizedExperiment)
 ```
 
 Here we illustrate the use of the package using artificially generated
@@ -86,7 +89,7 @@ mean and variance. A mean of 2 and variance of 0 indicates that the
 samples are identical. 
 
 ```{r, alleleSharing}
-suppressMessages(library(omicsPrint))
+library(omicsPrint)
 data <- alleleSharing(x)
 data
 ```
@@ -190,14 +193,14 @@ rm(list=ls())
 
 Now we extract the data from GEO using the
 [*GEOquery*](http://bioconductor.org/packages/GEOquery/)-package and convert 
-the returned onject into a 
+the returned object into a 
 [*SummarizedExperiment*](http://bioconductor.org/packages/SummarizedExperiment/):
 
 ```{r, downloaddata}
-suppressMessages(library(GEOquery))
-suppressMessages(library(SummarizedExperiment))
+library(GEOquery)
+library(SummarizedExperiment)
 gset <- getGEO("GSE39672", GSEMatrix=TRUE) 
-se <- SummarizedExperiment(assays = list(betas=gset[[1]]), 
+se <- SummarizedExperiment(assays = list(betas=exprs(gset[[1]])), 
                            colData=pData(gset[[1]]),
                            rowData=fData(gset[[1]]))
 se
@@ -213,20 +216,19 @@ colData(se)[1,c("title", "geo_accession", "type")]
 population <- colData(se)["characteristics_ch1"]
 table(population)
 ```
+
 If we would have had the raw idats we could extract the 65
-SNPs. However, experiences show that the 65 SNPs available on the
+SNPs. However, experience shows that the 65 SNPs available on the
 array are not enough to perform sample verification with high
 confidence. Fortunately, several probes on the array contain SNPs
-occuring frequently in different populations[@Chen2013; @Zhou2016]. 
+occurring frequently in different populations[@Chen2013; @Zhou2016]. 
 
-We have made the data available from the package
-[*DNAmArray*](https://github.com/molepi/DNAmArray).
+We have made the data available from inside of this package package.
 
 Now we make a selection of CpGs probably affected by polymorphic SNPS
 in these two populations:
 
 ```{r, selectcpgs}
-suppressMessages(library(DNAmArray))
 data(hm450.manifest.pop.GoNL)
 cpgs <- names(hm450.manifest.pop.GoNL[
     mcols(hm450.manifest.pop.GoNL)$MASK.snp5.CEU |
