@@ -32,7 +32,6 @@ suppressPackageStartupMessages({
     library(omicsPrint)
     library(Biobase)
     library(GEOquery)
-    library(DNAmArray) #see https://github.com/molepi/DNAmArray     
     library(minfi)
 })
 ```
@@ -92,8 +91,7 @@ The paper reported that the individuals are from cauciasian origin so
 we use a european set of SNPs; the GoNL set.
 
 ```{r, extractgenotypes}
-library(DNAmArray)
-data(hg19.GoNLsnps) ##From DNAmArray
+data(hg19.GoNLsnps)
 cgs <- hg19.GoNLsnps$probe[hg19.GoNLsnps$distance_c <= 0]
 dnamCalls <- beta2genotype(betas[rownames(betas) %in% cgs, ])
 dnamCalls[1:5, 1:5]
