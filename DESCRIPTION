@@ -13,7 +13,9 @@ Description: omicsPrint provides functionality for cross omic genetic
 Depends: R (>= 3.4), MASS
 Imports: methods, matrixStats, graphics, stats, SummarizedExperiment,
 	MultiAssayExperiment, RaggedExperiment
-Suggests: BiocStyle, knitr, rmarkdown, testthat
+Suggests: BiocStyle, knitr, rmarkdown, testthat, GEOquery,
+          VariantAnnotation, Rsamtools, BiocParallel, GenomicRanges,
+          FDb.InfiniumMethylation.hg19, snpStats
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
