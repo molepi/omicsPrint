@@ -22,11 +22,13 @@ bibliography: omicsPrint.bib
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(eval=TRUE, cache=TRUE)
+knitr::opts_chunk$set(eval=FALSE, cache=TRUE)
 suppressPackageStartupMessages({
     library(omicsPrint)
     library(GEOquery)
     library(GenomicRanges)
+    library(FDb.InfiniumMethylation.hg19)
+    library(BiocParallel)
 })
 ```
 
@@ -118,7 +120,7 @@ genotypes that we directly can use in the allelesharing algorithm.
 ```{r, genotypeextractor}
 getSnpMatrix <- function(chr, samples = NULL, which) {
     require(VariantAnnotation)
-
+    require(Rsamtools)
     message("Extracting SNPs for chromosome: ", chr)
     
     vcfFile <- paste0("ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chr", chr,

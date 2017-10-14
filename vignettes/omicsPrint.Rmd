@@ -38,8 +38,6 @@ bibliography: omicsPrint.bib
 ```{r setup, include=FALSE}
 set.seed(22062017)
 library(omicsPrint)
-library(GEOquery)
-library(SummarizedExperiment)
 ```
 
 Here we illustrate the use of the package using artificially generated
@@ -196,7 +194,7 @@ Now we extract the data from GEO using the
 the returned object into a 
 [*SummarizedExperiment*](http://bioconductor.org/packages/SummarizedExperiment/):
 
-```{r, downloaddata}
+```{r, downloaddata, eval=FALSE}
 library(GEOquery)
 library(SummarizedExperiment)
 gset <- getGEO("GSE39672", GSEMatrix=TRUE) 
@@ -209,7 +207,7 @@ se
 Sample data can be extracted from the `SummarizedExperiment`-object using the
 `colData`-function:
 
-```{r, extractphenotypes}
+```{r, extractphenotypes, eval=FALSE}
 names(colData(se))
 colData(se)[1,c("title", "geo_accession", "type")]
 
@@ -228,18 +226,19 @@ We have made the data available from inside of this package package.
 Now we make a selection of CpGs probably affected by polymorphic SNPS
 in these two populations:
 
-```{r, selectcpgs}
+```{r, selectcpgs, eval=FALSE}
 data(hm450.manifest.pop.GoNL)
 cpgs <- names(hm450.manifest.pop.GoNL[
     mcols(hm450.manifest.pop.GoNL)$MASK.snp5.CEU |
     mcols(hm450.manifest.pop.GoNL)$MASK.snp5.YRI])
 se <- se[cpgs,]
+se
 ```
 
 Next the beta-values are converted to genotypes using our enhanced
 K-means algorithm:
 
-```{r, genotyping}
+```{r, genotyping, eval=FALSE}
 dnamCalls <- beta2genotype(se, assayName = "betas")
 dim(dnamCalls)
 dnamCalls[1:5, 1:5]
@@ -248,7 +247,7 @@ dnamCalls[1:5, 1:5]
 The DNA methylation based genotype calls can be directly supplied to the
 allelesharing algorithm to perform the intra-omic sample matching:
 
-```{r, allelesharing}
+```{r, allelesharing, eval=FALSE}
 data <- alleleSharing(dnamCalls)
 mismatches <- inferRelations(data)
 nrow(data) ##number of pairs
