@@ -85,6 +85,8 @@ test_that("MultiAssayExperiment input alleleSharing", {
     map2 <- data.frame(primary = c("sample1", "sample2", "sample3"),
                       colname = c("sample1", "sample2", "sample3"))
     sampMap <- MultiAssayExperiment::listToMap(list(exp1 = map1, exp2 = map2))
+    sampMap$primary <- as.character(sampMap$primary)
+    sampMap$colname <- as.character(sampMap$colname)
     maeX <- MultiAssayExperiment::MultiAssayExperiment(expList, pheno, sampMap)
     maeY <- MultiAssayExperiment::MultiAssayExperiment(expList, pheno, sampMap)
     
@@ -151,6 +153,8 @@ test_that("MAE input beta2genotype", {
     map1 <- data.frame(primary = c("sample1", "sample2", "sample3"),
                        colname = c("sample1", "sample2", "sample3"))
     sampMap <- MultiAssayExperiment::listToMap(list(exp1 = map1))
+    sampMap$colname <- as.character(sampMap$colname)
+    sampMap$primary <- as.character(sampMap$primary)
     maeX <- MultiAssayExperiment::MultiAssayExperiment(expList, pheno, sampMap)
     
     expectected <- beta2genotype(x)

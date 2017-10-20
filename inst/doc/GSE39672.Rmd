@@ -177,13 +177,13 @@ gr <- hm450.manifest.pop.GoNL[mcols(hm450.manifest.pop.GoNL)$MASK.snp5.CEU
 
 mcols(gr) <- NULL
 seqlevels(gr) <- mapSeqlevels(seqlevels(gr), "NCBI")
-gr[1]
+gr
 ##check one
 ##dnaCalls <- getSnpMatrix(22, samples = samples, which=gr)
 ##dim(dnaCalls)
 library(BiocParallel)
 register(MulticoreParam(6))
-dnaCalls <- bplapply(1:6, getSnpMatrix, samples = colnames(dnamCalls), which=gr[1])
+dnaCalls <- bplapply(1:22, getSnpMatrix, samples = colnames(dnamCalls), which=gr)
 ##dnaCalls <- bplapply(1:6, getSnpMatrix, samples = NULL, which=gr)
 dnaCalls <- do.call('rbind', dnaCalls)
 dim(dnaCalls)

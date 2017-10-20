@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2017-10-16" />
+<meta name="date" content="2017-10-18" />
 
 <title>Verifying sample relationships using DNA Methylation data en Whole Genome Sequencing data</title>
 
@@ -227,11 +227,11 @@ div.tocify {
 <p class="author-name">Maarten van Iterson<span class="affil-mark">1*</span></p>
 <p class="author-affiliation"><span class="affil-mark">1</span>Department of Medical Statistics and Bioinformatics, Section Moleculair Epidemiology, Leiden University Medical Center</p>
 <p class="author-email"><span class="affil-mark">*</span><a href="mailto:mviterson@gmail.com">mviterson@gmail.com</a></p>
-<h4 class="date"><em>2017-10-16</em></h4>
+<h4 class="date"><em>2017-10-18</em></h4>
 <h4 class="abstract">Abstract</h4>
 Here we will show how you could verify sample relationships on publicly available DNA methylation data and whole genome sequencing data. We use the beta-value matrix extracted from GEO (GSE39672) and collect 1000G genotypes for partially overlapping samples from <a href="http://www.internationalgenome.org/data/">IGSR: The International Genome Sample Resource</a>.
 <h4 class="package">Package</h4>
-<p>omicsPrint 0.99.15</p>
+<p>omicsPrint 0.99.16</p>
 
 </div>
 
@@ -324,13 +324,13 @@ gr &lt;- hm450.manifest.pop.GoNL[mcols(hm450.manifest.pop.GoNL)$MASK.snp5.CEU
 
 mcols(gr) &lt;- NULL
 seqlevels(gr) &lt;- mapSeqlevels(seqlevels(gr), &quot;NCBI&quot;)
-gr[1]
+gr
 ##check one
 ##dnaCalls &lt;- getSnpMatrix(22, samples = samples, which=gr)
 ##dim(dnaCalls)
 library(BiocParallel)
 register(MulticoreParam(6))
-dnaCalls &lt;- bplapply(1:6, getSnpMatrix, samples = colnames(dnamCalls), which=gr[1])
+dnaCalls &lt;- bplapply(1:22, getSnpMatrix, samples = colnames(dnamCalls), which=gr)
 ##dnaCalls &lt;- bplapply(1:6, getSnpMatrix, samples = NULL, which=gr)
 dnaCalls &lt;- do.call('rbind', dnaCalls)
 dim(dnaCalls)

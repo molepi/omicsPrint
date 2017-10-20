@@ -1,4 +1,4 @@
-.rectangular <- function(x, y, verbose = TRUE){
+.rectangular <- function(x, y, verbose=TRUE){
     if( verbose )
         message("Running `rectangular` IBS algorithm!")
     
@@ -14,21 +14,20 @@
     N <- ncol(x)
     M <- ncol(y)
     indices <- seq_len(N)
-    mn <- s2 <- numeric(length = N*M)
+    mn <- s2 <- numeric(length=N*M)
     for(j in seq_len(M)) {
         ibs <- 2 - abs(x - y[,j])
-        mn[indices + N*(j-1)] <- colMeans(ibs, na.rm = na.rm)
-        s2[indices + N*(j-1)] <- colVars(as.matrix(ibs), na.rm = na.rm)
+        mn[indices + N*(j-1)] <- colMeans(ibs, na.rm=na.rm)
+        s2[indices + N*(j-1)] <- colVars(as.matrix(ibs), na.rm=na.rm)
         
         if( verbose & (j %% 100 == 0 | j == 1) )
             message(j*N, " of ", N*M, " (", round(100*j/M, 2), "%) ...")
     }
-    data.frame(mean = mn, var = s2,
-               colnames.x = rep(colnames(x), M), colnames.y = rep(colnames(y), 
-                                                                  each=N))
+    data.frame(mean=mn, var=s2, colnames.x=rep(colnames(x), M),
+        colnames.y=rep(colnames(y), each=N))
 }
 
-.square <- function(x, y, verbose = TRUE){
+.square <- function(x, y, verbose=TRUE){
     if( verbose )
         message("Running `square` IBS algorithm!")
     
@@ -43,19 +42,19 @@
     ##calculates mean and variance of IBS between all unique pairs of x (and y)
     N <- ncol(x)
     k <- 1
-    mn <- s2 <- numeric(length = N*(N+1)/2)
+    mn <- s2 <- numeric(length=N*(N+1)/2)
     for(j in seq_len(N)) {
         ibs <- 2 - abs(x[, j:N, drop=FALSE] - y[,j])
-        mn[k + 0:(N - j)] <- colMeans(ibs, na.rm = na.rm)
-        s2[k + 0:(N - j)] <- colVars(as.matrix(ibs), na.rm = na.rm)
+        mn[k + 0:(N - j)] <- colMeans(ibs, na.rm=na.rm)
+        s2[k + 0:(N - j)] <- colVars(as.matrix(ibs), na.rm=na.rm)
         k <- k + 1 +  N - j
         if( verbose & (j %% 100 == 0 | j == 1) )
             message(k, " of ", N*(N+1)/2, " (", round(100*k/(N*(N+1)/2), 2), 
-                    "%) ...")
+                "%) ...")
     }
-    data.frame(mean = mn, var = s2,
-               colnames.x = unlist(sapply(1:N, function(k) colnames(x)[k:N])), 
-               colnames.y = rep(colnames(y), N:1))
+    data.frame(mean=mn, var=s2, 
+        colnames.x=unlist(sapply(1:N, function(k) colnames(x)[k:N])), 
+        colnames.y=rep(colnames(y), N:1))
 }
 
 
@@ -68,7 +67,7 @@
     
     ##FIX level `identical`
     
-    identical <- names(grep("identical", as.list(rHash), value = TRUE))
+    identical <- names(grep("identical", as.list(rHash), value=TRUE))
     
     colnames.x <- gsub(":.*$", "", identical)
     colnames.y <- gsub("^.*:", "", identical)
@@ -87,7 +86,7 @@
     midy <- match(colnames.y, colnames(y))
     
     signs <- sign(unlist(lapply(seq_len(nrow(x)), function(i)
-        cov(x[i,midx], y[i,midy], use = "complete.obs", method = "spearman"))))
+        cov(x[i,midx], y[i,midy], use="complete.obs", method="spearman"))))
     
     for(i in seq_len(nrow(x))) {
         if( signs[i] < 0 ) {
@@ -99,8 +98,9 @@
     x
 }
 
-.hashRelations <- function(relations, idx.col = "idx", idy.col = "idy", 
-                           rel.col = "relation_type"){
+.hashRelations <- function(relations, idx.col="idx", idy.col="idy", 
+        rel.col="relation_type"){
+    
     hash <- new.env()
     keys <- paste(relations[, idx.col], relations[, idy.col], sep=":")
     values <- as.character(relations[, rel.col])
@@ -110,19 +110,19 @@
         stop("Nonconsistent relations!")
     
     ##redundant relations are automatically removed!
-    tmp <- mapply(assign, keys, values, MoreArgs = list(envir = hash))
+    tmp <- mapply(assign, keys, values, MoreArgs=list(envir=hash))
     hash
 }
 
-.constructRelations <- function(xnames, ynames, idx.col = "idx", 
-                                idy.col = "idy", rel.col = "relation_type") {
+.constructRelations <- function(xnames, ynames, idx.col="idx", 
+        idy.col="idy", rel.col="relation_type") {
+    
     if( !is.null(ynames) ) {
         if( length(intersect(xnames, ynames)) == 0 )
             stop("There must be at least some overlapping samples!")
-        relations <- expand.grid(idx = xnames, idy = ynames, 
-                                 stringsAsFactors = FALSE)
+        relations <- expand.grid(idx=xnames, idy=ynames, stringsAsFactors=FALSE)
     } else
-        relations <- expand.grid(idx = xnames, idy = xnames)
+        relations <- expand.grid(idx=xnames, idy=xnames)
     relations[,rel.col] <- "unrelated"
     identical <- relations[,idx.col] == relations[,idy.col]
     
@@ -134,7 +134,7 @@
 }
 
 
-.pruning <- function(x, callRate = 0.95, coverageRate = 2/3, verbose = TRUE) {
+.pruning <- function(x, callRate=0.95, coverageRate=2/3, verbose=TRUE) {
     nsnps <- nrow(x)
     nsamples <- ncol(x)
     
@@ -143,7 +143,7 @@
     
     if( verbose )
         message("There are ", sum(calledSNPs <= callRate),
-                " SNP dropped because of low call rate!")
+            " SNP dropped because of low call rate!")
     
     ##if the coverage of called SNPs is not larger then coverageRate do 
     ##not calculate IBS
@@ -151,7 +151,7 @@
     
     if( verbose )
         message("There are ", sum(coverage < coverageRate),
-                " sample set to NA because too little SNPs called!")
+            " sample set to NA because too little SNPs called!")
     
     x[calledSNPs > callRate, coverage >= coverageRate, drop=FALSE] ##drop those
 }
@@ -214,11 +214,10 @@
 ##' genotype[1:5, 1:5]
 ##' data <- alleleSharing(genotype)
 ##' head(data)
-alleleSharing <- function(x, y = NULL, relations = NULL, idx.col = "idx", 
-                          idy.col = "idy", rel.col = "relation_type", 
-                          callRate = 0.95, coverageRate = 2/3, 
-                          phasing = FALSE, assayNameX = NULL,
-                          assayNameY = NULL, verbose = TRUE) {
+alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx", 
+        idy.col="idy", rel.col="relation_type", callRate=0.95, coverageRate=2/3, 
+        phasing=FALSE, assayNameX=NULL, assayNameY=NULL, verbose=TRUE) {
+    
     if(!is.null(y)) {
         
         if(extends(class(y), "SummarizedExperiment") | 
@@ -253,33 +252,32 @@ alleleSharing <- function(x, y = NULL, relations = NULL, idx.col = "idx",
         stop("Colnames should be given!")
     
     if( is.null(relations )) {
-        relations <- .constructRelations(xnames = colnames(x), 
-                                         ynames = colnames(y),
-                                         idx.col = idx.col, idy.col = idy.col, 
-                                         rel.col = rel.col)
+        relations <- .constructRelations(xnames=colnames(x), 
+            ynames=colnames(y), idx.col=idx.col, idy.col=idy.col, 
+            rel.col=rel.col)
         relations <- relations[!duplicated(relations),]
     }
     
     if( verbose )
         message("Hash relations")
-    rHash <- .hashRelations(relations, idx.col = idx.col, idy.col = idy.col, 
-                            rel.col = rel.col)
+    rHash <- .hashRelations(relations, idx.col=idx.col, idy.col=idy.col, 
+        rel.col=rel.col)
     
     if( is.null(y) ) {
-        x <- .pruning(x, callRate = callRate, coverageRate = coverageRate, 
-                      verbose = verbose)
+        x <- .pruning(x, callRate=callRate, coverageRate=coverageRate, 
+            verbose=verbose)
         
         if( verbose )
             message("Using ", nrow(x), 
-                    " polymorphic SNPs to determine allele sharing.")
+                " polymorphic SNPs to determine allele sharing.")
         
         data <- .square(x, x, verbose)
         
     } else {
-        x <- .pruning(x, callRate = callRate, coverageRate = coverageRate, 
-                      verbose = verbose)
-        y <- .pruning(y, callRate = callRate, coverageRate = coverageRate, 
-                      verbose = verbose)
+        x <- .pruning(x, callRate=callRate, coverageRate=coverageRate, 
+            verbose=verbose)
+        y <- .pruning(y, callRate=callRate, coverageRate=coverageRate, 
+            verbose=verbose)
         
         rows <- intersect(rownames(x), rownames(y))
         rId <- match(rows, rownames(x))
@@ -292,20 +290,19 @@ alleleSharing <- function(x, y = NULL, relations = NULL, idx.col = "idx",
         
         if( verbose )
             message("Using ", nrow(x), 
-                    " polymophic SNPs to determine allele sharing.")
+                " polymophic SNPs to determine allele sharing.")
         
         data <- .rectangular(x, y, verbose)
         if( !(any(colnames(x) %in% data$colnames.x) & 
-              any(colnames(y) %in% data$colnames.y)) )
+            any(colnames(y) %in% data$colnames.y)) )
             stop("rHash and x or y do not match: probably swap 'x' and 'y'!")
     }
     
-    pairs <- paste(data$colnames.x, data$colnames.y, sep = ":")
+    pairs <- paste(data$colnames.x, data$colnames.y, sep=":")
     mId <- pairs %in% ls(rHash)
     data$relation <- "unrelated"
-    data$relation[mId] <- unlist(mget(pairs[mId], rHash, mode = "character", 
-                                      ifnotfound = list("unrelated")), 
-                                 use.names = FALSE)
+    data$relation[mId] <- unlist(mget(pairs[mId], rHash, mode="character", 
+        ifnotfound=list("unrelated")), use.names=FALSE)
     data$relation <- factor(data$relation)
     invisible(data)
 }
@@ -339,53 +336,52 @@ alleleSharing <- function(x, y = NULL, relations = NULL, idx.col = "idx",
 ##' data <- alleleSharing(genotype)
 ##' head(data)
 ##' inferRelations(data)
-inferRelations <- function(data, n = 100, plot.it = TRUE){
+inferRelations <- function(data, n=100, plot.it=TRUE) {
     data <- droplevels(data)
-    model <- lda(relation~mean+var, data = data)
+    model <- lda(relation~mean+var, data=data)
     
     predicted <- predict(model, data)
     
     data$predicted <- predicted$class
     
-    print(table(`Predicted relation` = data$predicted, 
-                `Assumed relation` = data$relation), zero.print = ".")
+    print(table(`Predicted relation`=data$predicted, 
+        `Assumed relation`=data$relation), zero.print=".")
     
     if( plot.it ) {
         id <- which(data$predicted != data$relation)
         
-        plot(data[, c("mean", "var")], pch = ".", cex = 3,
-             col = as.integer(data$relation),
-             xlab = "mean (IBS)", ylab = "variance (IBS)")
+        plot(data[, c("mean", "var")], pch=".", cex=3, 
+            col=as.integer(data$relation),  xlab="mean (IBS)", 
+            ylab="variance (IBS)")
         
-        xp <- seq(min(data$mean), max(data$mean), length = n)
-        yp <- seq(min(data$var), max(data$var), length = n)
-        grid <- expand.grid(mean = xp, var = yp)
+        xp <- seq(min(data$mean), max(data$mean), length=n)
+        yp <- seq(min(data$var), max(data$var), length=n)
+        grid <- expand.grid(mean=xp, var=yp)
         predicted <- predict(model, grid)
         posterior <- predicted$posterior
         
         if( ncol(posterior) > 2 ) {
             for(k in seq_len(ncol(posterior))) {
                 zp <- posterior[, k] - apply(posterior[,-k], 1, max)
-                contour(xp, yp, matrix(zp, n), add = TRUE, levels = 0,
-                        drawlabels = FALSE, lty = 1, lwd = 2, col = "grey")
+                contour(xp, yp, matrix(zp, n), add=TRUE, levels=0,
+                    drawlabels=FALSE, lty=1, lwd=2, col="grey")
             }
             
         } else {
             zp <- posterior[, 2] - pmax(posterior[, 1])
-            contour(xp, yp, matrix(zp, n), add = TRUE, levels = 0,
-                    drawlabels = FALSE, lty = 1, lwd = 2, col = "grey")
+            contour(xp, yp, matrix(zp, n), add=TRUE, levels=0,
+                drawlabels=FALSE, lty=1, lwd=2, col="grey")
         }
         
-        points(data[id, c("mean", "var")], pch = ".", cex = 3,
-               col = as.integer(data$relation[id]))
+        points(data[id, c("mean", "var")], pch=".", cex=3,
+            col=as.integer(data$relation[id]))
         legend("topright", paste("assumed", levels(data$relation)),
-               col = 1:nlevels(data$relation), pch = 15, bty = "n")
+            col=1:nlevels(data$relation), pch=15, bty="n")
         
         return(invisible(data[id,]))
     
     } else
         return(invisible(data))
-    
 }
 
 ##' convert DNA methylation beta-value to inferred genotypes
@@ -417,8 +413,8 @@ inferRelations <- function(data, n = 100, plot.it = TRUE){
 ##' beta[1:5, 1:5]
 ##' genotype <- beta2genotype(beta)
 ##' genotype[1:5, 1:5]
-beta2genotype <- function (betas, na.rm = TRUE, minSep = 0.25, minSize = 5, 
-                           centers = c(0.2, 0.5, 0.8), assayName = NULL) {
+beta2genotype <- function (betas, na.rm=TRUE, minSep=0.25, minSize=5, 
+        centers=c(0.2, 0.5, 0.8), assayName=NULL) {
     if(extends(class(betas), "SummarizedExperiment") |
        extends(class(betas), "MultiAssayExperiment")) { 
         
@@ -430,11 +426,12 @@ beta2genotype <- function (betas, na.rm = TRUE, minSep = 0.25, minSize = 5,
     
     genotypes <- apply(betas, 1, function(x) {
         
-        km <- try(kmeans(as.numeric(x), centers), silent = TRUE)
+        km <- try(kmeans(as.numeric(x), centers), silent=TRUE)
         
         if( !inherits(km, "try-error") ) {
             if( all(abs(rep(km$centers, 3) - 
-                        rep(km$centers, each = 3))[-c(1, 5, 9)] > minSep) ) {
+                rep(km$centers, each=3))[-c(1, 5, 9)] > minSep) ) {
+                
                 if( 100 * min(as.numeric(table(km$cluster)))/length(x) >
                     minSize )
                     return(km$cluster)

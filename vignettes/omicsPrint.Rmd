@@ -38,6 +38,8 @@ bibliography: omicsPrint.bib
 ```{r setup, include=FALSE}
 set.seed(22062017)
 library(omicsPrint)
+library(GEOquery)
+library(SummarizedExperiment)
 ```
 
 Here we illustrate the use of the package using artificially generated
@@ -179,66 +181,66 @@ missclassified sample relationships.
 
 # An example using real world methylation data from a `SummarizedExperiment` #
 
-The following shows the usage of the package using real world data.
-Here we will show how you could verify sample relationships on
-publicly available DNA methylation data and whole genome sequencing
-data. We will use a beta-value matrix extracted from GEO (GSE39672).
+The following show the usage of this package using real world data.
+Here we willshow how you could varify sample relationships on 
+puplicly available DNA methylation data on a whole genome sequencing
+dataset. The dataset used here contains pairs of monozygotic twins.
+We will extract the beta-value matrix from GEO (GSE100940). There is 
+currently no paper available for this dataset.
 
-Let's start by cleaning up the workspace:
-```{r, clearworkspace}
+First lets start by cleaning up the workspace:
+```{r clearworkspace}
 rm(list=ls())
 ```
 
 Now we extract the data from GEO using the
-[*GEOquery*](http://bioconductor.org/packages/GEOquery/)-package and convert 
+[*GEOquery*](http://bioconductor.org/packages/GEOquery/)-package and convert
 the returned object into a 
 [*SummarizedExperiment*](http://bioconductor.org/packages/SummarizedExperiment/):
 
-```{r, downloaddata, eval=FALSE}
+```{r downloaddata}
 library(GEOquery)
 library(SummarizedExperiment)
-gset <- getGEO("GSE39672", GSEMatrix=TRUE) 
+gset <- getGEO("GSE100940", GSEMatrix=TRUE)
 se <- SummarizedExperiment(assays = list(betas=exprs(gset[[1]])), 
                            colData=pData(gset[[1]]),
                            rowData=fData(gset[[1]]))
-se
 ```
 
 Sample data can be extracted from the `SummarizedExperiment`-object using the
-`colData`-function:
-
-```{r, extractphenotypes, eval=FALSE}
-names(colData(se))
-colData(se)[1,c("title", "geo_accession", "type")]
-
-population <- colData(se)["characteristics_ch1"]
-table(population)
+`colData`-function and we can see which pair of twins each sample belongs to 
+through the `source_name_ch1` field. Using this knowledge we can construct a 
+table of expected relationships:
+```{r makerelationships}
+r <- expand.grid(idx=colnames(se), idy=colnames(se))
+r$Xpair <- sapply(strsplit(as.character(colData(se)[r$idx, "source_name_ch1"]),
+                           split = "_"), head, 1)
+r$Ypair <- sapply(strsplit(as.character(colData(se)[r$idy, "source_name_ch1"]),
+                           split = "_"), head, 1)
+r$relation_type <- "unrelated"
+r$relation_type[r$Xpair == r$Ypair] <- "twin"
+r$relation_type[r$idx == r$idy] <- "indentical"
+head(r)
 ```
 
-If we would have had the raw idats we could extract the 65
-SNPs. However, experience shows that the 65 SNPs available on the
-array are not enough to perform sample verification with high
-confidence. Fortunately, several probes on the array contain SNPs
-occurring frequently in different populations[@Chen2013; @Zhou2016]. 
-
-We have made the data available from inside of this package package.
+Several probes on the array contain SNPs occurring frequently in different 
+populations[@Chen2013; @Zhou2016]. We can use these to verify the expected 
+relationships. We have made these data available from inside of this package.
 
 Now we make a selection of CpGs probably affected by polymorphic SNPS
-in these two populations:
+in populations from East Asian, as these samples are from South Korea:
 
-```{r, selectcpgs, eval=FALSE}
+```{r selectcpgs}
 data(hm450.manifest.pop.GoNL)
 cpgs <- names(hm450.manifest.pop.GoNL[
-    mcols(hm450.manifest.pop.GoNL)$MASK.snp5.CEU |
-    mcols(hm450.manifest.pop.GoNL)$MASK.snp5.YRI])
+    mcols(hm450.manifest.pop.GoNL)$MASK.snp5.EAS])
 se <- se[cpgs,]
-se
 ```
 
 Next the beta-values are converted to genotypes using our enhanced
 K-means algorithm:
 
-```{r, genotyping, eval=FALSE}
+```{r genotyping}
 dnamCalls <- beta2genotype(se, assayName = "betas")
 dim(dnamCalls)
 dnamCalls[1:5, 1:5]
@@ -247,21 +249,14 @@ dnamCalls[1:5, 1:5]
 The DNA methylation based genotype calls can be directly supplied to the
 allelesharing algorithm to perform the intra-omic sample matching:
 
-```{r, allelesharing, eval=FALSE}
-data <- alleleSharing(dnamCalls)
+```{r allelesharing, fig.cap="Scatter-plot of IBS mean and variance with classification boundaries. For pairwise comparison between samples consiting of pairs of monozygotic twins."}
+data <- alleleSharing(dnamCalls, relations = r, verbose = F)
 mismatches <- inferRelations(data)
-nrow(data) ##number of pairs
-ncol(dnamCalls) ##identical
-ncol(dnamCalls)*(ncol(dnamCalls) - 1)/2 ##non-identical
-ncol(dnamCalls)*(ncol(dnamCalls) + 1)/2 ##total
+mismatches
 ```
 
-There are no unknown relations in the data, verifying @Moen2013, as
-all samples should be unrelated.
-
-> NOTE: the number just represent the number of diagonal elements,
-> off-diagonal (upper or lower) and diagonal + off-diagonal
-> (upper/lower) of the square matrix with sample identifiers.
+The twins are predicted as being identical to each other. This is not
+unexpected as they are monozygotic.
 
 # SessionInfo #
 

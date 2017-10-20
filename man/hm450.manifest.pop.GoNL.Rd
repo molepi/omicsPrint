@@ -6,15 +6,19 @@
 \title{HM450 population-specific probe-masking recommendations}
 \format{A GRanges object with 485577 ranges and 65 metadata columns:
 \describe{
-  \item{MASK.general.pop}{Recommended general purpose masking merged from "MASK.sub30.copy", "MASK.mapping" (in either
-        the hg38 or hg19 genome), "MASK.extBase", "MASK.typeINextBaseSwitch" and "MASK.snp5.pop" from the 
-        "hm450.manifest" file and the "hm450.manifest.pop" file (see source).
-        For GoNL, "MASK.typeINextBaseSwitchandINDEL.GoNL" is used instead of "MASK.typeINextBaseSwitch"}
-  \item{MASK.snp5.pop}{Whether the 5bp 3'-subsequence (including extension for type II) overlap with a SNP with
-                       population-specific AF > 0.01}
-  \item{MASK.typeINextBaseSwitchandINDEL.GoNL}{SNPs (that cause a color-channel switch) and INDELS with AF > 0.01 in GoNL. 
-        In contrast, "MASK.typeINextBaseSwitch" column is based on all SNPs in 1000 genomes and dbSNP,
-        regardless of population or allele frequency}
+  \item{MASK.general.pop}{Recommended general purpose masking merged from 
+       "MASK.sub30.copy", "MASK.mapping" (in either the hg38 or hg19 
+       genome), "MASK.extBase", "MASK.typeINextBaseSwitch" and 
+       "MASK.snp5.pop" from the "hm450.manifest" file and the 
+       "hm450.manifest.pop" file (see source).For GoNL, 
+       "MASK.typeINextBaseSwitchandINDEL.GoNL" is used instead of 
+       "MASK.typeINextBaseSwitch"}
+  \item{MASK.snp5.pop}{Whether the 5bp 3'-subsequence (including extension 
+        for type II) overlap with a SNP with population-specific AF > 0.01}
+  \item{MASK.typeINextBaseSwitchandINDEL.GoNL}{SNPs (that cause a 
+       color-channel switch) and INDELS with AF > 0.01 in GoNL.  In 
+       contrast, "MASK.typeINextBaseSwitch" column is based on all SNPs in 
+       1000 genomes and dbSNP, regardless of population or allele frequency}
 }}
 \source{
 \url{http://zwdzwd.github.io/InfiniumAnnotation}
@@ -53,23 +57,32 @@ MASK.general column), so generally they won't be included in
 further analyses.
 }
 \examples{
-# Select probes that should be masked in Dutch population (note that X and Y chromosomes are not included)
-hm450.manifest.pop.GoNL <- hm450.manifest.pop.GoNL[!is.na(hm450.manifest.pop.GoNL$MASK.general.GoNL) &
-                                                     hm450.manifest.pop.GoNL$MASK.general.GoNL == TRUE, ]
+# Select probes that should be masked in Dutch population 
+# (note that X and Y chromosomes are not included)
+hm450.manifest.pop.GoNL <- hm450.manifest.pop.GoNL[!is.na(
+    hm450.manifest.pop.GoNL$MASK.general.GoNL) &
+    hm450.manifest.pop.GoNL$MASK.general.GoNL == TRUE, ]
   
 # Select probes that should be masked in Dutch population because there is 
-# a SNP within 5 bases of the 3'end of the probe (note that X and Y chromosomes are not included)
-hm450.manifest.pop.GoNL <- hm450.manifest.pop.GoNL[!is.na(hm450.manifest.pop.GoNL$MASK.snp5.GoNL) &
-                                                       hm450.manifest.pop.GoNL$MASK.snp5.GoNL == TRUE, ]
-# When studying a Dutch population and one wants to include X and Y chromosomal probes,
-# the EUR or CEU population can be used.                                                      
-# Select probes that should be masked in European population (these include X and Y chromosomes)                                                      
-hm450.manifest.pop.GoNL <- hm450.manifest.pop.GoNL[hm450.manifest.pop.GoNL$MASK.general.EUR == TRUE,]
+# a SNP within 5 bases of the 3'end of the probe 
+# (note that X and Y chromosomes are not included)
+hm450.manifest.pop.GoNL <- hm450.manifest.pop.GoNL[!is.na(
+    hm450.manifest.pop.GoNL$MASK.snp5.GoNL) &
+    hm450.manifest.pop.GoNL$MASK.snp5.GoNL == TRUE, ]
+    
+# When studying a Dutch population and one wants to include X and Y 
+# chromosomal probes, the EUR or CEU population can be used.                                                      
+# Select probes that should be masked in European population 
+# (these include X and Y chromosomes)                                                      
+hm450.manifest.pop.GoNL <- hm450.manifest.pop.GoNL[
+    hm450.manifest.pop.GoNL$MASK.general.EUR == TRUE,]
 
 
 }
 \references{
-Zhou W, Laird PW and Shen H: Comprehensive characterization, annotation and innovative use of Infinium DNA Methylation BeadChip probes.
-       Nucleic Acids Research 2016
+Zhou W, Laird PW and Shen H: Comprehensive characterization, 
+    annotation and innovative use of Infinium DNA Methylation BeadChip 
+    probes.
+    Nucleic Acids Research 2016
 }
 \keyword{datasets}
