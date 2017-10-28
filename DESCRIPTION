@@ -1,6 +1,6 @@
 Package: omicsPrint
 Title: Cross omic genetic fingerprinting
-Version: 0.99.16
+Version: 0.99.18
 Authors@R: c(
 	person("Maarten", "van Iterson", email ="mviterson@gmail.com", 
 	role = "aut"),
