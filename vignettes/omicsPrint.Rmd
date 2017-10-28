@@ -181,19 +181,19 @@ missclassified sample relationships.
 
 # An example using real world methylation data from a `SummarizedExperiment` #
 
-The following show the usage of this package using real world data.
-Here we willshow how you could varify sample relationships on 
-puplicly available DNA methylation data on a whole genome sequencing
-dataset. The dataset used here contains pairs of monozygotic twins.
-We will extract the beta-value matrix from GEO (GSE100940). There is 
-currently no paper available for this dataset.
-
-First lets start by cleaning up the workspace:
-```{r clearworkspace}
+Here we will show how you could varify sample relationships on
+publicly available DNA methylation data. The dataset used here
+contains pairs of monozygotic twins. We will extract the beta-value
+matrix from GEO
+[GSE100940](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE100940),
+[paper in
+press](http://www.sciencedirect.com/science/article/pii/S1875176817300872).
+ 
+```{r clearworkspace, echo=FALSE}
 rm(list=ls())
 ```
 
-Now we extract the data from GEO using the
+First we extract the data from GEO using the
 [*GEOquery*](http://bioconductor.org/packages/GEOquery/)-package and convert
 the returned object into a 
 [*SummarizedExperiment*](http://bioconductor.org/packages/SummarizedExperiment/):
@@ -203,14 +203,21 @@ library(GEOquery)
 library(SummarizedExperiment)
 gset <- getGEO("GSE100940", GSEMatrix=TRUE)
 se <- SummarizedExperiment(assays = list(betas=exprs(gset[[1]])), 
-                           colData=pData(gset[[1]]),
-                           rowData=fData(gset[[1]]))
+                           colData = pData(gset[[1]]),
+                           rowData = fData(gset[[1]]))
+```
+
+Alternatively, the IDAT-files can be downloaded. 
+		
+```{r, downloadidats, eval=FALSE}
+getGEOSuppFiles("GSE100940")
 ```
 
 Sample data can be extracted from the `SummarizedExperiment`-object using the
 `colData`-function and we can see which pair of twins each sample belongs to 
 through the `source_name_ch1` field. Using this knowledge we can construct a 
 table of expected relationships:
+      
 ```{r makerelationships}
 r <- expand.grid(idx=colnames(se), idy=colnames(se))
 r$Xpair <- sapply(strsplit(as.character(colData(se)[r$idx, "source_name_ch1"]),
@@ -219,7 +226,7 @@ r$Ypair <- sapply(strsplit(as.character(colData(se)[r$idy, "source_name_ch1"]),
                            split = "_"), head, 1)
 r$relation_type <- "unrelated"
 r$relation_type[r$Xpair == r$Ypair] <- "twin"
-r$relation_type[r$idx == r$idy] <- "indentical"
+r$relation_type[r$idx == r$idy] <- "identical"
 head(r)
 ```
 
@@ -250,7 +257,7 @@ The DNA methylation based genotype calls can be directly supplied to the
 allelesharing algorithm to perform the intra-omic sample matching:
 
 ```{r allelesharing, fig.cap="Scatter-plot of IBS mean and variance with classification boundaries. For pairwise comparison between samples consiting of pairs of monozygotic twins."}
-data <- alleleSharing(dnamCalls, relations = r, verbose = F)
+data <- alleleSharing(dnamCalls, relations = r, verbose = FALSE)
 mismatches <- inferRelations(data)
 mismatches
 ```
