@@ -207,12 +207,6 @@ se <- SummarizedExperiment(assays = list(betas=exprs(gset[[1]])),
                            rowData = fData(gset[[1]]))
 ```
 
-Alternatively, the IDAT-files can be downloaded. 
-		
-```{r, downloadidats, eval=FALSE}
-getGEOSuppFiles("GSE100940")
-```
-
 Sample data can be extracted from the `SummarizedExperiment`-object using the
 `colData`-function and we can see which pair of twins each sample belongs to 
 through the `source_name_ch1` field. Using this knowledge we can construct a 

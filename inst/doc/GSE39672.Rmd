@@ -18,6 +18,10 @@ output:
     toc: true
     toc_float:
       collapsed: false
+vignette: >
+  %\VignetteIndexEntry{Verifying sample relationships using DNA Methylation data en Whole Genome Sequencing data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 bibliography: omicsPrint.bib
 ---
 

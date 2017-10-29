@@ -14,6 +14,10 @@ output:
     toc: true
     toc_float:
       collapsed: false
+vignette: >
+  %\VignetteIndexEntry{Sample relationship verification using 450k DNA Methylation data: beta-values}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 bibliography: omicsPrint.bib
 ---
 
