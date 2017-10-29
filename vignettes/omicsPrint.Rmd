@@ -202,9 +202,9 @@ the returned object into a
 library(GEOquery)
 library(SummarizedExperiment)
 gset <- getGEO("GSE100940", GSEMatrix=TRUE)
-se <- SummarizedExperiment(assays = list(betas=exprs(gset[[1]])), 
-                           colData = pData(gset[[1]]),
-                           rowData = fData(gset[[1]]))
+gset[[1]]
+se <- makeSummarizedExperimentFromExpressionSet(gset[[1]])
+se
 ```
 
 Sample data can be extracted from the `SummarizedExperiment`-object using the
@@ -242,7 +242,7 @@ Next the beta-values are converted to genotypes using our enhanced
 K-means algorithm:
 
 ```{r genotyping}
-dnamCalls <- beta2genotype(se, assayName = "betas")
+dnamCalls <- beta2genotype(se, assayName = "exprs")
 dim(dnamCalls)
 dnamCalls[1:5, 1:5]
 ```
