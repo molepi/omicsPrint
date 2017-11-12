@@ -90,7 +90,7 @@ samples are identical.
 
 ```{r, alleleSharing}
 library(omicsPrint)
-data <- alleleSharing(x)
+data <- alleleSharing(x, verbose=TRUE)
 data
 ```
 
@@ -194,19 +194,44 @@ rm(list=ls())
 ```
 
 First we extract the data from GEO using the
-[*GEOquery*](http://bioconductor.org/packages/GEOquery/)-package and convert
-the returned object into a 
-[*SummarizedExperiment*](http://bioconductor.org/packages/SummarizedExperiment/):
-
-```{r downloaddata}
+[*GEOquery*](http://bioconductor.org/packages/GEOquery/)-package.
+	
+```{r downloaddataretry, echo=FALSE, results='hide'}
+library(GEOquery)
+library(SummarizedExperiment)
+gset <- NULL
+tryMax <- 5
+tries <- 0
+while(!inherits(gset,'list') | tries >= tryMax) {
+    tries <- tries + 1
+    gset <- tryCatch(
+        getGEO("GSE100940", GSEMatrix=TRUE),
+        error = function(e) {
+            Sys.sleep(5)
+            message('retrying')
+            return(e)
+        })
+}
+gset[[1]]
+```
+		
+```{r downloaddata, eval=FALSE}
 library(GEOquery)
 library(SummarizedExperiment)
 gset <- getGEO("GSE100940", GSEMatrix=TRUE)
 gset[[1]]
+```
+
+Next we convert the returned object into a 
+[*SummarizedExperiment*](http://bioconductor.org/packages/SummarizedExperiment/):
+
+	
+```{r geo2se}
 se <- makeSummarizedExperimentFromExpressionSet(gset[[1]])
 se
 ```
 
+	
 Sample data can be extracted from the `SummarizedExperiment`-object using the
 `colData`-function and we can see which pair of twins each sample belongs to 
 through the `source_name_ch1` field. Using this knowledge we can construct a 
@@ -251,7 +276,7 @@ The DNA methylation based genotype calls can be directly supplied to the
 allelesharing algorithm to perform the intra-omic sample matching:
 
 ```{r allelesharing, fig.cap="Scatter-plot of IBS mean and variance with classification boundaries. For pairwise comparison between samples consiting of pairs of monozygotic twins."}
-data <- alleleSharing(dnamCalls, relations = r, verbose = FALSE)
+data <- alleleSharing(dnamCalls, relations = r, verbose = TRUE)
 mismatches <- inferRelations(data)
 mismatches
 ```

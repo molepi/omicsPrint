@@ -133,8 +133,25 @@
     relations
 }
 
+.hardyweinberg <- function(x, alpha=0.05){
 
-.pruning <- function(x, callRate=0.95, coverageRate=2/3, verbose=TRUE) {
+    obs <- rowTabulates(matrix(as.integer(x), nrow=nrow(x)))
+    n <- ncol(x)
+    p <- (2*obs[,1] + obs[,2])/(2*n)
+    q <- 1 - p
+    exp <- n*cbind(p^2, 2*p*q, q^2)
+
+    stat <- rowSums(((obs - exp)^2)/exp)
+
+    ##pval <- pchisq(stat, df = 1)
+    
+    ##true in Hardy-Weinberg equilibrium
+    inEquilibrium <- stat < qchisq(1 - alpha/nrow(x), df = 1)
+    inEquilibrium[is.na(inEquilibrium)] <- FALSE
+    inEquilibrium
+}
+
+.pruning <- function(x, callRate=0.95, coverageRate=2/3, alpha = 0.05, verbose=TRUE) {
     nsnps <- nrow(x)
     nsamples <- ncol(x)
     
@@ -142,18 +159,26 @@
     calledSNPs <- apply(x, 1, function(x) sum(!is.na(x))/nsamples)
     
     if( verbose )
-        message("There are ", sum(calledSNPs <= callRate),
-            " SNP dropped because of low call rate!")
+        message("There are/is ", sum(calledSNPs <= callRate),
+            " SNP(s) dropped because of low call rate!")
     
     ##if the coverage of called SNPs is not larger then coverageRate do 
     ##not calculate IBS
     coverage <- apply(x, 2, function(x) sum(!is.na(x))/nsnps)
     
     if( verbose )
-        message("There are ", sum(coverage < coverageRate),
-            " sample set to NA because too little SNPs called!")
+        message("There are/is ", sum(coverage < coverageRate),
+                " sample(s) set to NA because too little SNPs called!")
+
+    ##Exclude SNP that violate Hardy-Weinberg principle
+    ##not calculate IBS
+    inEquilibrium <- .hardyweinberg(x, alpha = alpha)
     
-    x[calledSNPs > callRate, coverage >= coverageRate, drop=FALSE] ##drop those
+    if( verbose )
+        message("There are/is ", sum(!inEquilibrium),
+                " SNP(s) that violate the Hardy-Weinberg principle and will be removed!")
+        
+    x[calledSNPs > callRate & inEquilibrium, coverage >= coverageRate, drop=FALSE] ##drop those
 }
 
 ##' Run the allele sharing algorithm based on ibs
@@ -191,6 +216,8 @@
 ##'     threshold are dropped
 ##' @param coverageRate default 2/3 samples with less then threshold
 ##'     SNPs called are set to NA
+##' @param alpha significance level for Hardy-Weinberg test default alpha,
+##' internaly Bonferonni multiple testing will be applied
 ##' @param phasing default FALSE
 ##' @param assayNameX the name of the assay to be used for x (see x, y)
 ##' @param assayNameY same as assayNameX, but for y; if y is not 
@@ -198,8 +225,8 @@
 ##' @param verbose show progress default TRUE
 ##' @return data.frame with mean and variance ibs between all pairs
 ##' @author mvaniterson
-##' @importFrom matrixStats colVars
-##' @importFrom stats cov
+##' @importFrom matrixStats colVars rowTabulates
+##' @importFrom stats cov qchisq
 ##' @importFrom SummarizedExperiment assays
 ##' @importFrom MultiAssayExperiment assays
 ##' @importFrom RaggedExperiment compactAssay
@@ -215,8 +242,10 @@
 ##' data <- alleleSharing(genotype)
 ##' head(data)
 alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx", 
-        idy.col="idy", rel.col="relation_type", callRate=0.95, coverageRate=2/3, 
-        phasing=FALSE, assayNameX=NULL, assayNameY=NULL, verbose=TRUE) {
+                          idy.col="idy", rel.col="relation_type",
+                          callRate=0.95, coverageRate=2/3,
+                          alpha = 0.05, phasing=FALSE,
+                          assayNameX=NULL, assayNameY=NULL, verbose=TRUE) {
     
     if(!is.null(y)) {
         
