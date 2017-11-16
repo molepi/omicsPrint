@@ -1,4 +1,4 @@
-#try to filter probes like in vignette
+##try to filter probes like in vignette
 
 library(GEOquery)
 gse <- getGEO("GSE73412", GSEMatrix = T)
@@ -9,7 +9,7 @@ r <- expand.grid(idx=colnames(se), idy=colnames(se))
 r$Xfam <- substr(as.character(colData(se)[r$idx, "characteristics_ch1.3"]),
                  21, 29)
 r$Yfam <- substr(as.character(colData(se)[r$idy, "characteristics_ch1.3"]),
-                         21, 29)
+                 21, 29)
 r$Xrole <- substr(as.character(colData(se)[r$idx, "characteristics_ch1.3"]),
                   31, 50)
 r$Yrole <- substr(as.character(colData(se)[r$idy, "characteristics_ch1.3"]),
@@ -18,18 +18,18 @@ r[r == " N/A"] <- ""
 
 r$relationship <- "unrelated"
 
-fun <- function(x){
+fun <- function(x) {
     if (x["idx"] == x["idy"]){
         return("identical")
     }
-    
+
     if (x["Xfam"] == "" || x["Yfam"] == ""){
         return("unrelated")
     }
-    #print(x)
+    ##print(x)
     if (x["Yfam"] == x["Xfam"]){
         roles <- x[c("Xrole", "Yrole")]
-        #print(roles)
+     ##print(roles)
         if ("(son)" %in% roles && "(father)" %in% roles){
             return("father/son")
         } else if ("(son)" %in% roles && "(grandfather)" %in% roles) {

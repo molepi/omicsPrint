@@ -2,7 +2,6 @@ library(omicsPrint)
 library(GEOquery)
 library(SummarizedExperiment)
 
-
 gse <- getGEO("GSE102177")
 se <- makeSummarizedExperimentFromExpressionSet(gse$GSE102177_series_matrix.txt.gz)
 
@@ -27,3 +26,27 @@ gt <- beta2genotype(se, assayName = "exprs")
 data <- alleleSharing(gt, relations = r)
 mismatches <- inferRelations(data)
 mismatches
+
+
+
+##
+
+alpha <- seq(0, 100, by=1)
+nsnps <- numeric(length(alpha))
+for(i in 1:length(alpha)) {
+    x <- omicsPrint:::.pruning(gt, callRate=0.95, coverageRate=2/3, alpha = alpha[i], verbose=TRUE)
+    nsnps[i] <- nrow(x)
+}
+
+nrow(gt)
+
+
+pdf("InspectHWfiltering.pdf")
+
+plot(alpha/1000, 1000-nsnps, type = "b", log = "xy", panel.first=grid(col=1, equilogs=FALSE),
+     xlab = "Significant threshold (Bonferonni corrected)",
+     ylab = "Number of SNPs",
+     main = "Number of SNPs violating Hardy-Weinberg principle\n(at different significance levels)")
+
+dev.off()
+

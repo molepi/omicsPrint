@@ -294,7 +294,7 @@ alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx",
     
     if( is.null(y) ) {
         x <- .pruning(x, callRate=callRate, coverageRate=coverageRate, 
-            verbose=verbose)
+            alpha = alpha, verbose=verbose)
         
         if( verbose )
             message("Using ", nrow(x), 
@@ -304,9 +304,9 @@ alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx",
         
     } else {
         x <- .pruning(x, callRate=callRate, coverageRate=coverageRate, 
-            verbose=verbose)
+            alpha = alpha, verbose=verbose)
         y <- .pruning(y, callRate=callRate, coverageRate=coverageRate, 
-            verbose=verbose)
+            alpha = alpha, verbose=verbose)
         
         rows <- intersect(rownames(x), rownames(y))
         rId <- match(rows, rownames(x))
