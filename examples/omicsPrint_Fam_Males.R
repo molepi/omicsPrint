@@ -1,3 +1,4 @@
+
 ##try to filter probes like in vignette
 
 getGEO <- function(..., tmax = 5, verbose = TRUE){
@@ -26,6 +27,10 @@ getGEO <- function(..., tmax = 5, verbose = TRUE){
 ##gse <- getGEO("GSE73412", GSEMatrix = TRUE)
 
 
+
+
+library(GEOquery)
+gse <- getGEO("GSE73412", GSEMatrix = T)
 
 library(omicsPrint)
 library(SummarizedExperiment)
@@ -83,7 +88,10 @@ cpgs <- names(hm450.manifest.pop.GoNL[
 
 se2 <- se[cpgs,]
 
-gt <- beta2genotype(se, assayName = "exprs")
+se3 <- se[, se$characteristics_ch1.3 != "family relationship: N/A"]
+se4 <- se3[cpgs,]
+
+gt <- beta2genotype(se4, assayName = "exprs")
 data <- alleleSharing(gt, relations = r, rel.col = "relationship", verbose = TRUE)
 mismatches <- inferRelations(data)
 mismatches
