@@ -20,7 +20,7 @@
         mn[indices + N*(j-1)] <- colMeans(ibs, na.rm=na.rm)
         s2[indices + N*(j-1)] <- colVars(as.matrix(ibs), na.rm=na.rm)
         
-        if( verbose & (j %% 100 == 0 | j == 1) )
+        if( verbose & (j %% 100 == 0 | j == 1) & (N > 10 | M >10))
             message(j*N, " of ", N*M, " (", round(100*j/M, 2), "%) ...")
     }
     data.frame(mean=mn, var=s2, colnames.x=rep(colnames(x), M),
@@ -48,7 +48,7 @@
         mn[k + 0:(N - j)] <- colMeans(ibs, na.rm=na.rm)
         s2[k + 0:(N - j)] <- colVars(as.matrix(ibs), na.rm=na.rm)
         k <- k + 1 +  N - j
-        if( verbose & (j %% 100 == 0 | j == 1) )
+        if( verbose & (j %% 100 == 0 | j == 1) & N > 10)
             message(k, " of ", N*(N+1)/2, " (", round(100*k/(N*(N+1)/2), 2), 
                 "%) ...")
     }
@@ -168,7 +168,7 @@
     
     if( verbose )
         message("There are/is ", sum(coverage < coverageRate),
-                " sample(s) set to NA because too little SNPs called!")
+                " sample(s) set to NA because too few SNPs called!")
 
     ##Exclude SNP that violate Hardy-Weinberg principle
     ##not calculate IBS
@@ -294,7 +294,7 @@ alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx",
     
     if( is.null(y) ) {
         x <- .pruning(x, callRate=callRate, coverageRate=coverageRate, 
-            verbose=verbose)
+            alpha = alpha, verbose=verbose)
         
         if( verbose )
             message("Using ", nrow(x), 
@@ -304,9 +304,9 @@ alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx",
         
     } else {
         x <- .pruning(x, callRate=callRate, coverageRate=coverageRate, 
-            verbose=verbose)
+            alpha = alpha, verbose=verbose)
         y <- .pruning(y, callRate=callRate, coverageRate=coverageRate, 
-            verbose=verbose)
+            alpha = alpha, verbose=verbose)
         
         rows <- intersect(rownames(x), rownames(y))
         rId <- match(rows, rownames(x))
