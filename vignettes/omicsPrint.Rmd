@@ -247,27 +247,8 @@ press](http://www.sciencedirect.com/science/article/pii/S1875176817300872).
  
 First we extract the data from GEO using the
 [*GEOquery*](http://bioconductor.org/packages/GEOquery/)-package.
-	
-```{r downloaddataretry, echo=FALSE, results='hide', eval=FALSE}
-library(GEOquery)
-library(SummarizedExperiment)
-gset <- NULL
-tryMax <- 5
-tries <- 0
-while(!(inherits(gset,'list') | tries >= tryMax)) {
-    tries <- tries + 1
-    gset <- tryCatch(
-        getGEO("GSE100940", GSEMatrix=TRUE),
-        error = function(e) {
-            Sys.sleep(5)
-            message('retrying')
-            return(e)
-        })
-}
-gset[[1]]
-```
 		
-```{r downloaddata, eval=FALSE}
+```{r downloaddata}
 library(GEOquery)
 library(SummarizedExperiment)
 gset <- getGEO("GSE100940", GSEMatrix=TRUE)
@@ -278,7 +259,7 @@ Next we convert the returned object into a
 [*SummarizedExperiment*](http://bioconductor.org/packages/SummarizedExperiment/):
 
 	
-```{r geo2se, eval=FALSE}
+```{r geo2se}
 se <- makeSummarizedExperimentFromExpressionSet(gset[[1]])
 se
 ```
@@ -289,7 +270,7 @@ Sample data can be extracted from the `SummarizedExperiment`-object using the
 through the `source_name_ch1` field. Using this knowledge we can construct a 
 table of expected relationships:
       
-```{r makerelationships, eval=FALSE}
+```{r makerelationships}
 r <- expand.grid(idx=colnames(se), idy=colnames(se))
 r$Xpair <- sapply(strsplit(as.character(colData(se)[r$idx, "source_name_ch1"]),
                            split = "_"), head, 1)
@@ -308,7 +289,7 @@ relationships. We have made these data available from inside of this package.
 Now we make a selection of CpGs probably affected by polymorphic SNPS
 in populations from East Asian, as these samples are from South Korea:
 
-```{r selectcpgs, eval=FALSE}
+```{r selectcpgs}
 data(hm450.manifest.pop.GoNL)
 cpgs <- names(hm450.manifest.pop.GoNL[
     mcols(hm450.manifest.pop.GoNL)$MASK.snp5.EAS])
@@ -318,7 +299,7 @@ se <- se[cpgs,]
 Next the beta-values are converted to genotypes using our enhanced
 K-means algorithm:
 
-```{r genotyping, eval=FALSE}
+```{r genotyping}
 dnamCalls <- beta2genotype(se, assayName = "exprs")
 dim(dnamCalls)
 dnamCalls[1:5, 1:5]
@@ -327,7 +308,7 @@ dnamCalls[1:5, 1:5]
 The DNA methylation based genotype calls can be directly supplied to the
 allelesharing algorithm to perform the intra-omic sample matching:
 
-```{r allelesharing, eval=FALSE, fig.cap="Scatter-plot of IBS mean and variance with classification boundaries for pairwise comparison between samples consiting of pairs of monozygotic twins."}
+```{r allelesharing, dpi=72, fig.cap="Scatter-plot of IBS mean and variance with classification boundaries for pairwise comparison between samples consisting of pairs of monozygotic twins."}
 data <- alleleSharing(dnamCalls, relations = r, verbose = TRUE)
 mismatches <- inferRelations(data)
 mismatches
