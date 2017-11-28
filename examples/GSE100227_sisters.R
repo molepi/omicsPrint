@@ -1,7 +1,3 @@
-library(readr)
-library(GEOquery)
-library(SummarizedExperiment)
-library(omicsPrint)
 
 d <- read_tsv("~/Downloads/GSE100227_normalized_data.txt", progress = T)
 d <- d[, ! grepl("Detection", colnames(d))]
@@ -10,18 +6,24 @@ rownames(d) <- d$ID_REF
 d <- d[, !colnames(d) == "ID_REF"]
 
 
-#gse <- getGEO("GSE100227")
-#save(gse, file="/home/dcats/GSE100227.Rdata")
-load("/home/dcats/GSE100227.Rdata")
-samples <- pData(gse$GSE100227_series_matrix.txt.gz)
-rownames(samples) <- samples$description
 
+library(GEOquery)
+library(SummarizedExperiment)
+##gset <- getGEO("GSE100227", GSEMatrix=TRUE, AnnotGPL=FALSE)
+##this is more stable somehow?
+file <- tempfile()
+download.file("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE100nnn/GSE100227/suppl/GSE100227_normalized_data.txt.gz", file)
+gse <- getGEO(filename=file)
+gse
+se <- makeSummarizedExperimentFromExpressionSet(gse)
+se
 
-r <- expand.grid(idx=rownames(samples), idy=rownames(samples))
-r$Xfam <- substr(samples[r$idx, "characteristics_ch1.1"], 12, 100)
-r$Yfam <- substr(samples[r$idy, "characteristics_ch1.1"], 12, 100)
-r$Xrole <- substr(samples[r$idx, "characteristics_ch1.2"], 11, 100)
-r$Yrole <- substr(samples[r$idy, "characteristics_ch1.2"], 11, 100)
+r <- expand.grid(idx=colnames(se), idy=colnames(se))
+
+r$Xfam <- colData(se)[r$idx, "characteristics_ch1.1"]
+r$Yfam <- colData(se)[r$idy, "characteristics_ch1.1"]
+r$Xrole <- colData(se)[r$idx, "characteristics_ch1.2"]
+r$Yrole <- colData(se)[r$idy, "characteristics_ch1.2"]
 
 fun <- function(x){
     if (x["idx"] == x["idy"]) {
@@ -37,12 +39,13 @@ fun <- function(x){
 }
 
 r$relation_type <- apply(r, 1, fun)
+head(r)
 
 data(hm450.manifest.pop.GoNL)
 cpgs <- names(hm450.manifest.pop.GoNL[
         mcols(hm450.manifest.pop.GoNL)$MASK.snp5.EUR])
 
-d2 <- d[cpgs,]
+se2 <- se[cpgs,]
 
 gt <- beta2genotype(d2, minSize = 7)
 data <- alleleSharing(gt, relations = r2, verbose = TRUE)

@@ -1,27 +1,40 @@
 ---
-title: "Sample relationship verification using 450k DNA Methylation data: beta-values"
-shorttitle: "Verifying sample relationships using beta-values"
+title: "Verifying sample relationships using genotypes or inferred genotypes"
+shorttitle: "Verifying sample relationships"
 package: "omicsPrint"
-abstract: "Here we will show how you could verify sample relationships on publicly available DNA methylation data, often a beta-value matrix from the Gene Expression Omnibus."
 author: 
 - name: "Maarten van Iterson"
   affiliation: 
   - "Department of Medical Statistics and Bioinformatics, Section Moleculair Epidemiology, Leiden University Medical Center"
   email: mviterson@gmail.com
+- name: "Davy Cats"
+  affiliation: 
+  - "Department of Medical Statistics and Bioinformatics, Section Moleculair Epidemiology, Leiden University Medical Center"
+  email: davycats.dc@gmail.com
 date: "`r Sys.Date()`"
+abstract: >
+  Analysis of multiple omics datatypes from the same individuals is
+  becoming increasingly common. For example, several data repositories
+  contain genetic, transcriptomic and epigenetic (DNA methylation)
+  measurements on the same individuals, e.g. TCGA, Geuvadis,
+  BBMRI/BIOS, etc. We have developed a tool that can verify the sample
+  relationships between and across omics types. A small number of
+  misspecified samples can destroy analyses for example assuming an
+  analysis on unrelated individuals whereas parent offspring relations
+  exist.
 output: 
   BiocStyle::html_document2:
     toc: true
     toc_float:
       collapsed: false
 vignette: >
-  %\VignetteIndexEntry{Sample relationship verification using 450k DNA Methylation data: beta-values}
+  %\VignetteIndexEntry{Verifying sample relationships using genotypes or inferred genotypes}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 bibliography: omicsPrint.bib
 ---
 
-# Intro #
+# Sample verification using 450k DNA methylation from GEO #
 
 Here we use the beta-value matrix extracted from GEO (GSE52980). The
 data was generated to perform an epigenome analysis of human epidermal
@@ -31,12 +44,10 @@ able to verify this using genotypes extracted from the beta-values.
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(eval=TRUE, cache=TRUE)
 suppressPackageStartupMessages({
+    library(BiocStyle)
     library(omicsPrint)
-    library(Biobase)
     library(GEOquery)
-    library(minfi)
 })
 ```
 
@@ -46,15 +57,16 @@ First we extract the data from GEO and select the platform on which
 the DNA methylation was measured (GPL13534).
 
 ```{r, downloaddata}
-library(Biobase)
 library(GEOquery)
-# load series and platform data from GEO
-gset <- getGEO("GSE52980", GSEMatrix = TRUE, getGPL=FALSE)
-idx <- grep("GPL13534", attr(gset, "names"))
-betas <- exprs(gset[[idx]])
-##or just read from ftp
-##betas <- read.table("ftp://ftp.ncbi.nlm.nih.gov/geo/platforms/GPL13nnn/GPL13534/suppl/GPL13534%5FHumanMethylation450%5F15017482%5Fv%2E1%2E1%2Ecsv%2Egz")
+##gse <- getGEO("GSE52980", GSEMatrix=TRUE, AnnotGPL=FALSE)
+##this is more stable somehow?
+file <- tempfile()
+download.file("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE52nnn/GSE52980/matrix/GSE52980-GPL13534_series_matrix.txt.gz", file)
+gse <- getGEO(filename=file)
+
+betas <- exprs(gse)
 dim(betas)
+
 ```
 
 # Preprocessing metadata #
@@ -64,7 +76,7 @@ of which samples belong to which individuals. Furthermore, some
 additional (carcinoma) samples have been removed.
 
 ```{r, extractphenotypes}
-pheno <- pData(gset[[idx]])[, c("title", "characteristics_ch1", 
+pheno <- pData(gse)[, c("title", "characteristics_ch1", 
     "characteristics_ch1.1",  "characteristics_ch1.2", "characteristics_ch1.3")]
 colnames(pheno) <- c("title", "sex", "age", "exposure", "tissue")
 pheno <- apply(pheno, 2, function(x) gsub("^.*: ", "", x))
@@ -96,6 +108,7 @@ The paper reported that the individuals are from cauciasian origin so
 we use a european set of SNPs; the GoNL set.
 
 ```{r, extractgenotypes}
+library(omicsPrint)
 data(hg19.GoNLsnps)
 cgs <- hg19.GoNLsnps$probe[hg19.GoNLsnps$distance_c <= 0]
 dnamCalls <- beta2genotype(betas[rownames(betas) %in% cgs, ])

@@ -189,48 +189,28 @@ matrix from GEO
 [paper in
 press](http://www.sciencedirect.com/science/article/pii/S1875176817300872).
  
-```{r clearworkspace, echo=FALSE}
-rm(list=ls())
-```
-
 First we extract the data from GEO using the
 [*GEOquery*](http://bioconductor.org/packages/GEOquery/)-package.
-	
-```{r downloaddataretry, echo=FALSE, results='hide'}
-library(GEOquery)
-library(SummarizedExperiment)
-gset <- NULL
-tryMax <- 5
-tries <- 0
-while(!inherits(gset,'list') | tries >= tryMax) {
-    tries <- tries + 1
-    gset <- tryCatch(
-        getGEO("GSE100940", GSEMatrix=TRUE),
-        error = function(e) {
-            Sys.sleep(5)
-            message('retrying')
-            return(e)
-        })
-}
-gset[[1]]
-```
 		
-```{r downloaddata, eval=FALSE}
+```{r downloaddata}
 library(GEOquery)
 library(SummarizedExperiment)
-gset <- getGEO("GSE100940", GSEMatrix=TRUE)
-gset[[1]]
+##gset <- getGEO("GSE100940", GSEMatrix=TRUE, AnnotGPL=FALSE)
+##this is more stable somehow?
+##file <- tempfile()
+##download.file("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE100nnn/GSE100940/matrix/GSE100940_series_matrix.txt.gz", file)
+file <- "/home/maarten/Downloads/GSE100940_series_matrix.txt.gz"
+gse <- getGEO(filename=file, GSEMatrix=TRUE, AnnotGPL=FALSE)
+gse
 ```
 
 Next we convert the returned object into a 
 [*SummarizedExperiment*](http://bioconductor.org/packages/SummarizedExperiment/):
-
 	
 ```{r geo2se}
-se <- makeSummarizedExperimentFromExpressionSet(gset[[1]])
+se <- makeSummarizedExperimentFromExpressionSet(gse)
 se
 ```
-
 	
 Sample data can be extracted from the `SummarizedExperiment`-object using the
 `colData`-function and we can see which pair of twins each sample belongs to 
@@ -275,7 +255,7 @@ dnamCalls[1:5, 1:5]
 The DNA methylation based genotype calls can be directly supplied to the
 allelesharing algorithm to perform the intra-omic sample matching:
 
-```{r allelesharing, fig.cap="Scatter-plot of IBS mean and variance with classification boundaries. For pairwise comparison between samples consiting of pairs of monozygotic twins."}
+```{r allelesharing, dpi = 72, fig.retina = 1, fig.cap="Scatter-plot of IBS mean and variance with classification boundaries. For pairwise comparison between samples consiting of pairs of monozygotic twins."}
 data <- alleleSharing(dnamCalls, relations = r, verbose = TRUE)
 mismatches <- inferRelations(data)
 mismatches
