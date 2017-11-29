@@ -43,7 +43,7 @@ A few vignettes are provides showing applications of using **omicsPrint** to sim
 
 - [omicsPrint](http://htmlpreview.github.io/?https://raw.githubusercontent.com/molepi/omicsPrint/master/inst/doc/omicsPrint.html)
 
-- [GSE102177_DNAm_siblings(http://htmlpreview.github.io/?https://raw.githubusercontent.com/molepi/omicsPrint/examples/examples/GSE102177_DNAm_siblings)
+- [GSE102177_DNAm_siblings(http://htmlpreview.github.io/?https://github.com/molepi/omicsPrint/blob/examples/examples/GSE102177_DNAm_siblings.html)
 
 These will be added:
       
