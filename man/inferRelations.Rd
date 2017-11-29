@@ -4,7 +4,7 @@
 \alias{inferRelations}
 \title{predict mismatches}
 \usage{
-inferRelations(data, n = 100, plot.it = TRUE)
+inferRelations(data, n = 100, plot.it = TRUE, verbose = FALSE)
 }
 \arguments{
 \item{data}{output from allelesharing}
@@ -14,6 +14,8 @@ classification boundaries}
 
 \item{plot.it}{= TRUE default plot classification graph and
 returing mismatches otherwise return all}
+
+\item{verbose}{default FALSE, if TRUE show confusion matrix}
 }
 \value{
 predicted mismatches

@@ -349,6 +349,7 @@ alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx",
 ##'     classification boundaries
 ##' @param plot.it = TRUE default plot classification graph and
 ##'     returing mismatches otherwise return all
+##' @param verbose default FALSE, if TRUE show confusion matrix
 ##' @return predicted mismatches
 ##' @author mvaniterson
 ##' @importFrom graphics contour legend plot points
@@ -365,16 +366,18 @@ alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx",
 ##' data <- alleleSharing(genotype)
 ##' head(data)
 ##' inferRelations(data)
-inferRelations <- function(data, n=100, plot.it=TRUE) {
+inferRelations <- function(data, n=100, plot.it=TRUE, verbose=FALSE) {
     data <- droplevels(data)
     model <- lda(relation~mean+var, data=data)
     
     predicted <- predict(model, data)
     
     data$predicted <- predicted$class
-    
-    print(table(`Predicted relation`=data$predicted, 
+
+    if(verbose) {
+        print(table(`Predicted relation`=data$predicted, 
         `Assumed relation`=data$relation), zero.print=".")
+    }
     
     if( plot.it ) {
         id <- which(data$predicted != data$relation)
