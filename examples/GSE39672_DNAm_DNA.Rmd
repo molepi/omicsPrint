@@ -1,30 +1,51 @@
 ---
-title: "Verifying sample relationships using DNA Methylation data en Whole Genome Sequencing data"
+title: "omicsPrint: detection of data linkage errors in multiple omics studies"
+shorttitle: "Verifying sample relationships"
 package: "omicsPrint"
-abstract: 
-  "Here we will show how you could verify sample relationships on
-  publicly available DNA methylation data and whole genome sequencing
-  data. We use the beta-value matrix extracted from GEO (GSE39672) and
-  collect 1000G genotypes for partially overlapping samples from
-  [IGSR: The International Genome Sample Resource](http://www.internationalgenome.org/data/)."
-author:
+author: 
 - name: "Maarten van Iterson"
-  affiliation:
-  - "Department of Medical Statistics and Bioinformatics, Section Moleculair Epidemiology, Leiden University Medical Center"
+  affiliation: 
+  - &id "Department of Medical Statistics and Bioinformatics, Section Moleculair Epidemiology, Leiden University Medical Center,
+  Leiden, The Netherlands"  
   email: mviterson@gmail.com
+- name: "Davy Cats"
+  affiliation: *id  
+  email: davycats.dc@gmail.com
+- name: "Paul Hop"
+  affiliation: *id    
+  email: pjhop@gmail.com  
+- name: "Bas T. Heijmans"
+  affiliation: *id    
+  email: b.t.heijmans@lumc.nl
 date: "`r Sys.Date()`"
-output:
+abstract: >
+  The Aanalysis of multiple omics datatypes from the same
+  individuals is becoming increasingly common. For example,
+  several data repositories contain genetic, transcriptomic
+  and epigenetic (DNA methylation) measurements on the same
+  individuals, e.g., TCGA, Geuvadis, BBMRI/BIOS, etc. However,
+  errors in the data linkage are almost inevitable in such
+  complex projects (e.g. due to sample mix-ups) and unknown
+  family relationships may be present. If not corrected, such
+  errors may introduce false positive or false negative
+  findings. To streamline necessary quality control, we have
+  developed a tool to reliably verify the sample relationships
+  between and across omics data types using genotype data that
+  is directly measured or inferred from for example RNA-seq or
+  DNA methylation array data.    	  
+output: 
   BiocStyle::html_document2:
     toc: true
     toc_float:
       collapsed: false
 vignette: >
-  %\VignetteIndexEntry{Verifying sample relationships using DNA Methylation data en Whole Genome Sequencing data}
+  %\VignetteIndexEntry{omicsPrint: detection of data linkage errors in multiple omics studies}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 bibliography: omicsPrint.bib
 ---
 
+	
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(eval=FALSE, cache=TRUE)
 suppressPackageStartupMessages({

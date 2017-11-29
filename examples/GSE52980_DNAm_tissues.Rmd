@@ -1,34 +1,45 @@
 ---
-title: "Verifying sample relationships using genotypes or inferred genotypes"
+title: "omicsPrint: detection of data linkage errors in multiple omics studies"
 shorttitle: "Verifying sample relationships"
 package: "omicsPrint"
 author: 
 - name: "Maarten van Iterson"
   affiliation: 
-  - "Department of Medical Statistics and Bioinformatics, Section Moleculair Epidemiology, Leiden University Medical Center"
+  - &id "Department of Medical Statistics and Bioinformatics, Section Moleculair Epidemiology, Leiden University Medical Center,
+  Leiden, The Netherlands"  
   email: mviterson@gmail.com
 - name: "Davy Cats"
-  affiliation: 
-  - "Department of Medical Statistics and Bioinformatics, Section Moleculair Epidemiology, Leiden University Medical Center"
+  affiliation: *id  
   email: davycats.dc@gmail.com
+- name: "Paul Hop"
+  affiliation: *id    
+  email: pjhop@gmail.com  
+- name: "Bas T. Heijmans"
+  affiliation: *id    
+  email: b.t.heijmans@lumc.nl
 date: "`r Sys.Date()`"
 abstract: >
-  Analysis of multiple omics datatypes from the same individuals is
-  becoming increasingly common. For example, several data repositories
-  contain genetic, transcriptomic and epigenetic (DNA methylation)
-  measurements on the same individuals, e.g. TCGA, Geuvadis,
-  BBMRI/BIOS, etc. We have developed a tool that can verify the sample
-  relationships between and across omics types. A small number of
-  misspecified samples can destroy analyses for example assuming an
-  analysis on unrelated individuals whereas parent offspring relations
-  exist.
+  The Aanalysis of multiple omics datatypes from the same
+  individuals is becoming increasingly common. For example,
+  several data repositories contain genetic, transcriptomic
+  and epigenetic (DNA methylation) measurements on the same
+  individuals, e.g., TCGA, Geuvadis, BBMRI/BIOS, etc. However,
+  errors in the data linkage are almost inevitable in such
+  complex projects (e.g. due to sample mix-ups) and unknown
+  family relationships may be present. If not corrected, such
+  errors may introduce false positive or false negative
+  findings. To streamline necessary quality control, we have
+  developed a tool to reliably verify the sample relationships
+  between and across omics data types using genotype data that
+  is directly measured or inferred from for example RNA-seq or
+  DNA methylation array data.    	  
 output: 
   BiocStyle::html_document2:
     toc: true
     toc_float:
       collapsed: false
 vignette: >
-  %\VignetteIndexEntry{Verifying sample relationships using genotypes or inferred genotypes}
+  %\VignetteIndexEntry{omicsPrint: detection of data linkage errors in multiple omics studies}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 bibliography: omicsPrint.bib

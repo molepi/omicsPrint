@@ -43,9 +43,15 @@ A few vignettes are provides showing applications of using **omicsPrint** to sim
 
 - [omicsPrint](http://htmlpreview.github.io/?https://raw.githubusercontent.com/molepi/omicsPrint/master/inst/doc/omicsPrint.html)
 
-- [GSE39672](http://htmlpreview.github.io/?https://raw.githubusercontent.com/molepi/omicsPrint/master/inst/doc/GSE39672.html)
+- [GSE102177_DNAm_siblings(http://htmlpreview.github.io/?https://raw.githubusercontent.com/molepi/omicsPrint/examples/examples/GSE102177_DNAm_siblings)
 
-- [GSE52980](http://htmlpreview.github.io/?https://raw.githubusercontent.com/molepi/omicsPrint/master/inst/doc/GSE52980.html)
+These will be added:
+      
+GSE52980_DNAm_tissues
+GSE73412_DNAm_familymen
+GSE39672_DNAm_DNA
+GSE100227_DNAm_sisters
+
 
 
 

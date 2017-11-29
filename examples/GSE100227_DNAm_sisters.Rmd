@@ -1,0 +1,102 @@
+---
+title: "omicsPrint: detection of data linkage errors in multiple omics studies"
+shorttitle: "Verifying sample relationships"
+package: "omicsPrint"
+author: 
+- name: "Maarten van Iterson"
+  affiliation: 
+  - &id "Department of Medical Statistics and Bioinformatics, Section Moleculair Epidemiology, Leiden University Medical Center,
+  Leiden, The Netherlands"  
+  email: mviterson@gmail.com
+- name: "Davy Cats"
+  affiliation: *id  
+  email: davycats.dc@gmail.com
+- name: "Paul Hop"
+  affiliation: *id    
+  email: pjhop@gmail.com  
+- name: "Bas T. Heijmans"
+  affiliation: *id    
+  email: b.t.heijmans@lumc.nl
+date: "`r Sys.Date()`"
+abstract: >
+  The Aanalysis of multiple omics datatypes from the same
+  individuals is becoming increasingly common. For example,
+  several data repositories contain genetic, transcriptomic
+  and epigenetic (DNA methylation) measurements on the same
+  individuals, e.g., TCGA, Geuvadis, BBMRI/BIOS, etc. However,
+  errors in the data linkage are almost inevitable in such
+  complex projects (e.g. due to sample mix-ups) and unknown
+  family relationships may be present. If not corrected, such
+  errors may introduce false positive or false negative
+  findings. To streamline necessary quality control, we have
+  developed a tool to reliably verify the sample relationships
+  between and across omics data types using genotype data that
+  is directly measured or inferred from for example RNA-seq or
+  DNA methylation array data.    	  
+output: 
+  BiocStyle::html_document2:
+    toc: true
+    toc_float:
+      collapsed: false
+vignette: >
+  %\VignetteIndexEntry{omicsPrint: detection of data linkage errors in multiple omics studies}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: omicsPrint.bib
+---
+
+
+
+```{r}
+library(GEOquery)
+library(SummarizedExperiment)
+##gset <- getGEO("GSE100227", GSEMatrix=TRUE, AnnotGPL=FALSE)
+##this is more stable somehow?
+file <- tempfile()
+download.file("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE100nnn/GSE100227/suppl/GSE100227_normalized_data.txt.gz", file)
+gse <- getGEO(filename=file)
+gse
+se <- makeSummarizedExperimentFromExpressionSet(gse)
+se
+
+r <- expand.grid(idx=colnames(se), idy=colnames(se))
+
+r$Xfam <- colData(se)[r$idx, "characteristics_ch1.1"]
+r$Yfam <- colData(se)[r$idy, "characteristics_ch1.1"]
+r$Xrole <- colData(se)[r$idx, "characteristics_ch1.2"]
+r$Yrole <- colData(se)[r$idy, "characteristics_ch1.2"]
+
+fun <- function(x){
+    if (x["idx"] == x["idy"]) {
+        return("identical")
+    } else if (x["Xfam"] != x["Yfam"]) {
+        return("unrelated")
+    } else if (x["Xrole"] == x["Yrole"]) {
+        return(x["Xrole"])
+    } else {
+        return("Sister")
+    }
+    return("hello")
+}
+
+r$relation_type <- apply(r, 1, fun)
+head(r)
+
+data(hm450.manifest.pop.GoNL)
+cpgs <- names(hm450.manifest.pop.GoNL[
+        mcols(hm450.manifest.pop.GoNL)$MASK.snp5.EUR])
+
+se2 <- se[cpgs,]
+
+gt <- beta2genotype(d2, minSize = 7)
+data <- alleleSharing(gt, relations = r2, verbose = TRUE)
+mismatches <- inferRelations(data)
+```
+
+# SessionInfo #
+
+```{r, sessioninfo}
+sessionInfo()
+```
+
+# Reference #
