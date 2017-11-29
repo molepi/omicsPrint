@@ -251,7 +251,9 @@ First we extract the data from GEO using the
 ```{r downloaddata}
 library(GEOquery)
 library(SummarizedExperiment)
-gset <- getGEO("GSE100940", GSEMatrix=TRUE)
+file <- tempfile()
+download.file("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE100nnn/GSE100940/matrix/GSE100940_series_matrix.txt.gz", file)
+gset <- getGEO(filename=file)
 gset[[1]]
 ```
 
