@@ -34,23 +34,18 @@ and install the package from source:
 git clone git@git.lumc.nl:molepi/omicsPrint.git
 R CMD build omicsPrint
 R CMD INSTALL omicsPrint_x.y.z.tar.gz
-```
+```11
 Change `_x.y.z.` to the proper version you downloaded!
 
 ## Vignettes ##
 
 A few vignettes are provides showing applications of using **omicsPrint** to simulated and publicly available data:
 
-- [omicsPrint](http://htmlpreview.github.io/?https://raw.githubusercontent.com/molepi/omicsPrint/master/inst/doc/omicsPrint.html)
-
-- [GSE102177_DNAm_siblings(http://htmlpreview.github.io/?https://github.com/molepi/omicsPrint/blob/examples/examples/GSE102177_DNAm_siblings.html)
-
-These will be added:
-      
-GSE52980_DNAm_tissues
-GSE73412_DNAm_familymen
-GSE39672_DNAm_DNA
-GSE100227_DNAm_sisters
+- [omicsPrint](http://htmlpreview.github.io/?https://github.com/molepi/omicsPrint/master/inst/doc/omicsPrint.html)
+-[GSE52980_DNAm_tissues](http://htmlpreview.github.io/?https://github.com/molepi/omicsPrint/blob/examples/examples/GSE52980_DNAm_tissues.html)
+-[GSE73412_DNAm_familymen](http://htmlpreview.github.io/?https://github.com/molepi/omicsPrint/blob/examples/examples/GSE73412_DNAm_familymen.html)
+-[GSE39672_DNAm_DNA](http://htmlpreview.github.io/?https://github.com/molepi/omicsPrint/blob/examples/examples/GSE39672_DNAm_DNA.html)
+-[GSE100227_DNAm_sisters](https://github.com/molepi/omicsPrint/blob/examples/examples/GSE100227_DNAm_sisters.html)
 
 
 
