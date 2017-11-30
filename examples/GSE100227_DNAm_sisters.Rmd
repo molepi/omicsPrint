@@ -46,25 +46,46 @@ bibliography: omicsPrint.bib
 ---
 
 
-
+## Retrieving sample information
 ```{r}
 library(GEOquery)
-library(SummarizedExperiment)
 ##gset <- getGEO("GSE100227", GSEMatrix=TRUE, AnnotGPL=FALSE)
 ##this is more stable somehow?
 file <- tempfile()
-download.file("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE100nnn/GSE100227/suppl/GSE100227_normalized_data.txt.gz", file)
-gse <- getGEO(filename=file)
+download.file("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE100nnn/GSE100227/matrix/GSE100227_series_matrix.txt.gz", file)
+gse <- getGEO(filename = file)
 gse
-se <- makeSummarizedExperimentFromExpressionSet(gse)
-se
+samples <- pData(gse)
+rownames(samples) <- samples$description
+```
 
-r <- expand.grid(idx=colnames(se), idy=colnames(se))
+## Retrieving beta values
+Unfortunately the data retrieved from GEO above does not include the beta values.
+These values instead as provided in a supplementary file.
 
-r$Xfam <- colData(se)[r$idx, "characteristics_ch1.1"]
-r$Yfam <- colData(se)[r$idy, "characteristics_ch1.1"]
-r$Xrole <- colData(se)[r$idx, "characteristics_ch1.2"]
-r$Yrole <- colData(se)[r$idy, "characteristics_ch1.2"]
+```{r, warning=FALSE}
+library(readr)
+
+file2 <- tempfile()
+file3 <- tempfile()
+download.file("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE100nnn/GSE100227/suppl/GSE100227_normalized_data.txt.gz", file2)
+gunzip(file2, file3)
+
+d <- read_tsv(file3)
+d <- d[, ! grepl("Detection", colnames(d))] # remove useless columns
+d <- as.data.frame(d)
+rownames(d) <- d$ID_REF
+d <- d[, !colnames(d) == "ID_REF"]
+```
+
+## Determine relationships
+```{r}
+r <- expand.grid(idx=rownames(samples), idy=rownames(samples))
+
+r$Xfam <- substr(samples[r$idx, "characteristics_ch1.1"], 12, 100)
+r$Yfam <- substr(samples[r$idy, "characteristics_ch1.1"], 12, 100)
+r$Xrole <- substr(samples[r$idx, "characteristics_ch1.2"], 11, 100)
+r$Yrole <- substr(samples[r$idy, "characteristics_ch1.2"], 11, 100)
 
 fun <- function(x){
     if (x["idx"] == x["idy"]) {
@@ -81,15 +102,23 @@ fun <- function(x){
 
 r$relation_type <- apply(r, 1, fun)
 head(r)
+```
 
+## Filter probes
+```{r}
+library(omicsPrint)
+library(GenomicRanges)
 data(hm450.manifest.pop.GoNL)
 cpgs <- names(hm450.manifest.pop.GoNL[
         mcols(hm450.manifest.pop.GoNL)$MASK.snp5.EUR])
 
-se2 <- se[cpgs,]
+d2 <- d[cpgs,]
+```
 
-gt <- beta2genotype(d2, minSize = 7)
-data <- alleleSharing(gt, relations = r2, verbose = TRUE)
+## Check relationships
+```{r}
+gt <- beta2genotype(d2)
+data <- alleleSharing(gt, relations = r, verbose = TRUE)
 mismatches <- inferRelations(data)
 ```
 

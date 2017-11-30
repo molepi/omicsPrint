@@ -47,7 +47,7 @@ bibliography: omicsPrint.bib
 
 	
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(eval=FALSE, cache=TRUE)
+knitr::opts_chunk$set(eval=TRUE, cache=TRUE)
 suppressPackageStartupMessages({
     library(omicsPrint)
     library(GEOquery)
