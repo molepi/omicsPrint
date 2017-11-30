@@ -41,11 +41,15 @@ Change `_x.y.z.` to the proper version you downloaded!
 
 A few vignettes are provides showing applications of using **omicsPrint** to simulated and publicly available data:
 
-- [omicsPrint](http://htmlpreview.github.io/?https://github.com/molepi/omicsPrint/master/inst/doc/omicsPrint.html)
--[GSE52980_DNAm_tissues](http://htmlpreview.github.io/?https://github.com/molepi/omicsPrint/blob/examples/examples/GSE52980_DNAm_tissues.html)
--[GSE73412_DNAm_familymen](http://htmlpreview.github.io/?https://github.com/molepi/omicsPrint/blob/examples/examples/GSE73412_DNAm_familymen.html)
--[GSE39672_DNAm_DNA](http://htmlpreview.github.io/?https://github.com/molepi/omicsPrint/blob/examples/examples/GSE39672_DNAm_DNA.html)
--[GSE100227_DNAm_sisters](https://github.com/molepi/omicsPrint/blob/examples/examples/GSE100227_DNAm_sisters.html)
+[omicsPrint](http://htmlpreview.github.io/?https://github.com/molepi/omicsPrint/blobl/master/inst/doc/omicsPrint.html)
+
+[GSE52980_DNAm_tissues](http://htmlpreview.github.io/?https://github.com/molepi/omicsPrint/blob/examples/examples/GSE52980_DNAm_tissues.html)
+
+[GSE73412_DNAm_familymen](http://htmlpreview.github.io/?https://github.com/molepi/omicsPrint/blob/examples/examples/GSE73412_DNAm_familymen.html)
+
+[GSE39672_DNAm_DNA](http://htmlpreview.github.io/?https://github.com/molepi/omicsPrint/blob/examples/examples/GSE39672_DNAm_DNA.html)
+
+[GSE100227_DNAm_sisters](http://htmlpreview.github.io/?https://github.com/molepi/omicsPrint/blob/examples/examples/GSE100227_DNAm_sisters.html)
 
 
 
