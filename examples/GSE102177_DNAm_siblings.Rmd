@@ -35,7 +35,7 @@ abstract: >
   is directly measured or inferred from for example RNA-seq or
   DNA methylation array data.    	  
 output: 
-  BiocStyle::html_document2:
+  BiocStyle::html_document:
     toc: true
     toc_float:
       collapsed: false
@@ -131,7 +131,7 @@ for(i in 1:length(sizes)){
         cntr = cntr +1
         indices <- sample(1:nrow(gt), sizes[i])
         data <- alleleSharing(gt[indices,], relations = r, verbose=FALSE)
-        predictions <- inferRelations(data, plot.it=FALSE)
+        predictions <- inferRelations(data, plot.it=FALSE, verbose=FALSE)
         miss[i, j] <- nrow(predictions) - sum(diag(table(predictions$predicted, predictions$relation)))
     }
 }

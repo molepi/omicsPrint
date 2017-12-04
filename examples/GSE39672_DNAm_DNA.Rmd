@@ -34,7 +34,7 @@ abstract: >
   is directly measured or inferred from for example RNA-seq or
   DNA methylation array data.    	  
 output: 
-  BiocStyle::html_document2:
+  BiocStyle::html_document:
     toc: true
     toc_float:
       collapsed: false
@@ -65,20 +65,19 @@ beta-values are extracted using the `exprs`-function:
 
 ```{r, downloaddata}
 library(GEOquery)
-gset <- getGEO("GSE39672", GSEMatrix=TRUE) 
+library(SummarizedExperiment)
+file <- tempfile()
+download.file("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE39nnn/GSE39672/matrix/GSE39672_series_matrix.txt.gz", file)
+gset <- getGEO(filename=file) 
 gset
-betas <- exprs(gset[[1]]) 
-dim(betas)
+se <- makeSummarizedExperimentFromExpressionSet(gset)
+colnames(se) <- gsub("cell line: ", "", colData(se)$characteristics_ch1.2)
 ```
 
-Sample names can be extract from the `gse`-object using the
-`pData`-function:
 
 ```{r, extractphenotypes}
-population <- gsub("^.* ", "", pData(gset[[1]])$characteristics_ch1)
+population <- gsub("^.* ", "", colData(se)$characteristics_ch1)
 table(population)
-colnames(betas) <- gsub("^.* ", "", pData(gset[[1]])$title)
-betas[1:5, 1:5]
 ```
 
 If we would have had the raw idats we could extract the 65
@@ -105,7 +104,7 @@ Next the beta-values are converted to genotypes using our enhanced
 K-means algorithm:
 
 ```{r, genotyping}
-dnamCalls <- beta2genotype(betas[rownames(betas) %in% cpgs, ])
+dnamCalls <- beta2genotype(se[cpgs,], assayName = "exprs")
 dim(dnamCalls)
 dnamCalls[1:5, 1:5]
 ```
@@ -131,8 +130,7 @@ all samples should be unrelated.
 
 # Genotype Data #
 
-
-Since the sample used in this study (GSE39672) are overlapping with
+Since the samples used in this study (GSE39672) are overlapping with
 the HapMap and 1000G samples we can extract the whole genome
 sequencing derived genotypes.
 
@@ -204,13 +202,15 @@ mcols(gr) <- NULL
 seqlevels(gr) <- mapSeqlevels(seqlevels(gr), "NCBI")
 gr
 ##check one
+##samples <- gsub("cell line: ", "", colData(se)$characteristics_ch1.2)
 ##dnaCalls <- getSnpMatrix(22, samples = samples, which=gr)
 ##dim(dnaCalls)
 library(BiocParallel)
 register(MulticoreParam(2))
-dnaCalls <- bplapply(1:22, getSnpMatrix, samples = colnames(dnamCalls), which=gr)
+dnaCalls <- bplapply(1:22, getSnpMatrix, samples = colnames(se), which=gr)
 ##dnaCalls <- bplapply(1:6, getSnpMatrix, samples = NULL, which=gr)
 dnaCalls <- do.call('rbind', dnaCalls)
+save(dnaCalls, file="dnaCallsRaw.RData")
 dim(dnaCalls)
 dnaCalls[1:5, 1:5]
 ```
@@ -259,11 +259,12 @@ seqlevels(rngs) <- mapSeqlevels(seqlevels(rngs), "NCBI")
 map <- names(rngs)
 names(map) <- paste(seqnames(rngs),
                     mcols(rngs)$probeTarget, sep=":")
-mid <- match(map, rownames(betas))
-rownames(betas)[mid] <- names(map)
+
+mid <- match(map, rownames(se))
+rownames(se)[mid[!is.na(mid)]] <- names(map)[!is.na(mid)]
 
 library(omicsPrint)
-dnamCalls <- beta2genotype(betas[rownames(betas) %in% rownames(dnaCalls),])
+dnamCalls <- beta2genotype(se[rownames(se) %in% rownames(dnaCalls),], assayName = "exprs")
 dim(dnamCalls)
 dim(dnaCalls)
 
@@ -273,7 +274,6 @@ mismatches
 
 ##ncol(dnamCalls) * ncol(dnaCalls) ## now the matrix is rectangular
 
-require(readxl)
 file <- tempfile(fileext=".ped")
 download.file("ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20130606_sample_info/20130606_g1k.ped", destfile=file)
 
@@ -346,6 +346,13 @@ levels(colors) <- c("red", "blue", "orange")
 
 with(plotdata, {
     plot(mean, var, pch=18, col=adjustcolor(colors, alpha.f = 0.3),
+         xlab="mean (IBS)", ylab="variance (IBS)")
+    points(2, 0, pch=18, col="black")
+    legend("topright", levels(labels), col=levels(colors), pch=18, bty="n")
+     })
+
+with(plotdata, {
+    plot(mean, var, pch=18, col=colors,
          xlab="mean (IBS)", ylab="variance (IBS)")
     points(2, 0, pch=18, col="black")
     legend("topright", levels(labels), col=levels(colors), pch=18, bty="n")

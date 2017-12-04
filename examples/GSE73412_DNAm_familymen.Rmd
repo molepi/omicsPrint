@@ -34,7 +34,7 @@ abstract: >
   is directly measured or inferred from for example RNA-seq or
   DNA methylation array data.    	  
 output: 
-  BiocStyle::html_document2:
+  BiocStyle::html_document:
     toc: true
     toc_float:
       collapsed: false
