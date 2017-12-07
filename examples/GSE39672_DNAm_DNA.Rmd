@@ -54,6 +54,7 @@ suppressPackageStartupMessages({
     library(GenomicRanges)
     library(FDb.InfiniumMethylation.hg19)
     library(BiocParallel)
+    library(BiocStyle)
 })
 ```
 
@@ -107,6 +108,8 @@ K-means algorithm:
 dnamCalls <- beta2genotype(se[cpgs,], assayName = "exprs")
 dim(dnamCalls)
 dnamCalls[1:5, 1:5]
+save(dnamCalls, file="dnamCalls.RData")
+load("dnamCalls.RData")
 ```
 
 The DNA methylation based genotype calls can directly supplied to the
@@ -207,10 +210,11 @@ gr
 ##dim(dnaCalls)
 library(BiocParallel)
 register(MulticoreParam(2))
-dnaCalls <- bplapply(1:22, getSnpMatrix, samples = colnames(se), which=gr)
+##dnaCalls <- bplapply(1:22, getSnpMatrix, samples = colnames(se), which=gr)
 ##dnaCalls <- bplapply(1:6, getSnpMatrix, samples = NULL, which=gr)
-dnaCalls <- do.call('rbind', dnaCalls)
-save(dnaCalls, file="dnaCallsRaw.RData")
+##dnaCalls <- do.call('rbind', dnaCalls)
+##save(dnaCalls, file="dnaCallsRaw.RData")
+load("dnaCallsRaw.RData")
 dim(dnaCalls)
 dnaCalls[1:5, 1:5]
 ```
@@ -222,7 +226,7 @@ allel frequenties and retain those above a certain threshold, i.e.,
 ```{r, filtering}
 maf <- apply(dnaCalls, 1, function(x) min(table(x)/length(x)))
 hist(maf)
-dnaCalls <- dnaCalls[maf > 0.01 & maf < 1,]
+dnaCalls <- dnaCalls[maf >= 0.01 & maf < 1,]
 dim(dnaCalls)
 ```
 
@@ -265,6 +269,7 @@ rownames(se)[mid[!is.na(mid)]] <- names(map)[!is.na(mid)]
 
 library(omicsPrint)
 dnamCalls <- beta2genotype(se[rownames(se) %in% rownames(dnaCalls),], assayName = "exprs")
+dnamCalls <- beta2genotype(se, assayName = "exprs")
 dim(dnamCalls)
 dim(dnaCalls)
 
