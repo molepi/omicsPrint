@@ -247,8 +247,20 @@ press](http://www.sciencedirect.com/science/article/pii/S1875176817300872).
  
 First we extract the data from GEO using the
 [*GEOquery*](http://bioconductor.org/packages/GEOquery/)-package.
-		
-```{r downloaddata}
+
+```{r downloadretry, include=FALSE}
+library(GEOquery)
+library(SummarizedExperiment)
+file <- tempfile()
+cnt <- 0
+value <- -1
+while(value != 0  & cnt < 25) {
+    value = download.file("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE100nnn/GSE100940/matrix/GSE100940_series_matrix.txt.gz", file)
+    cnt <- cnt + 1
+}
+```
+			
+```{r downloaddata, eval=FALSE}
 library(GEOquery)
 library(SummarizedExperiment)
 file <- tempfile()
