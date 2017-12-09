@@ -34,7 +34,7 @@ abstract: >
   is directly measured or inferred from for example RNA-seq or
   DNA methylation array data.    	  
 output: 
-  BiocStyle::html_document2:
+  BiocStyle::html_document:
     toc: true
     toc_float:
       collapsed: false
@@ -247,14 +247,26 @@ press](http://www.sciencedirect.com/science/article/pii/S1875176817300872).
  
 First we extract the data from GEO using the
 [*GEOquery*](http://bioconductor.org/packages/GEOquery/)-package.
-		
-```{r downloaddata}
+
+```{r downloadretry, include=FALSE}
+library(GEOquery)
+library(SummarizedExperiment)
+file <- tempfile()
+cnt <- 0
+value <- -1
+while(value != 0  & cnt < 25) {
+    value = download.file("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE100nnn/GSE100940/matrix/GSE100940_series_matrix.txt.gz", file)
+    cnt <- cnt + 1
+}
+gset <- getGEO(filename=file)
+```
+			
+```{r downloaddata, eval=FALSE}
 library(GEOquery)
 library(SummarizedExperiment)
 file <- tempfile()
 download.file("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE100nnn/GSE100940/matrix/GSE100940_series_matrix.txt.gz", file)
 gset <- getGEO(filename=file)
-gset[[1]]
 ```
 
 Next we convert the returned object into a 
@@ -262,7 +274,7 @@ Next we convert the returned object into a
 
 	
 ```{r geo2se}
-se <- makeSummarizedExperimentFromExpressionSet(gset[[1]])
+se <- makeSummarizedExperimentFromExpressionSet(gset)
 se
 ```
 

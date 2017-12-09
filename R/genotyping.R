@@ -20,7 +20,7 @@
         mn[indices + N*(j-1)] <- colMeans(ibs, na.rm=na.rm)
         s2[indices + N*(j-1)] <- colVars(as.matrix(ibs), na.rm=na.rm)
         
-        if( verbose & (j %% 100 == 0 | j == 1) )
+        if( verbose & (j %% 100 == 0 | j == 1) & (N > 10 | M >10))
             message(j*N, " of ", N*M, " (", round(100*j/M, 2), "%) ...")
     }
     data.frame(mean=mn, var=s2, colnames.x=rep(colnames(x), M),
@@ -48,7 +48,7 @@
         mn[k + 0:(N - j)] <- colMeans(ibs, na.rm=na.rm)
         s2[k + 0:(N - j)] <- colVars(as.matrix(ibs), na.rm=na.rm)
         k <- k + 1 +  N - j
-        if( verbose & (j %% 100 == 0 | j == 1) )
+        if( verbose & (j %% 100 == 0 | j == 1) & N > 10)
             message(k, " of ", N*(N+1)/2, " (", round(100*k/(N*(N+1)/2), 2), 
                 "%) ...")
     }
@@ -168,7 +168,7 @@
     
     if( verbose )
         message("There are/is ", sum(coverage < coverageRate),
-                " sample(s) set to NA because too little SNPs called!")
+                " sample(s) set to NA because too few SNPs called!")
 
     ##Exclude SNP that violate Hardy-Weinberg principle
     ##not calculate IBS
@@ -349,6 +349,7 @@ alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx",
 ##'     classification boundaries
 ##' @param plot.it = TRUE default plot classification graph and
 ##'     returing mismatches otherwise return all
+##' @param verbose default FALSE, if TRUE show confusion matrix
 ##' @return predicted mismatches
 ##' @author mvaniterson
 ##' @importFrom graphics contour legend plot points
@@ -365,16 +366,18 @@ alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx",
 ##' data <- alleleSharing(genotype)
 ##' head(data)
 ##' inferRelations(data)
-inferRelations <- function(data, n=100, plot.it=TRUE) {
+inferRelations <- function(data, n=100, plot.it=TRUE, verbose=FALSE) {
     data <- droplevels(data)
     model <- lda(relation~mean+var, data=data)
     
     predicted <- predict(model, data)
     
     data$predicted <- predicted$class
-    
-    print(table(`Predicted relation`=data$predicted, 
+
+    if(verbose) {
+        print(table(`Predicted relation`=data$predicted, 
         `Assumed relation`=data$relation), zero.print=".")
+    }
     
     if( plot.it ) {
         id <- which(data$predicted != data$relation)
