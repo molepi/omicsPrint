@@ -250,7 +250,7 @@ methylation and genotype data there should be an overlapping set of
 SNPs.
 
 Here we map probe identifiers to `chromosome:position`, like the
-genotype data using information for the array provider available from
+enotype data using information for the array provider available from
 the
 [*FDb.InfiniumMethylation.hg19*](https://bioconductor.org/packages/FDb.InfiniumMethylation.hg19)-package,
 and rename to probes.
@@ -277,22 +277,7 @@ data <- alleleSharing(dnamCalls, dnaCalls, phasing=TRUE)
 mismatches <- inferRelations(data)
 mismatches
 
-##ncol(dnamCalls) * ncol(dnaCalls) ## now the matrix is rectangular
-
-file <- tempfile(fileext=".ped")
-download.file("ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20130606_sample_info/20130606_g1k.ped", destfile=file)
-
-ped <- read.table(file, header=TRUE, sep="\t")
-subset(ped, Individual.ID == "NA19129")
 ```
-
-There are 103 overlapping samples between DNA and DNAm. Three pairs of
-DNA-DNAm seems not properly matching. I suspect bad quality of DNAm or
-DNA! And one unrelated is parent offspring relation, for example, this
-is verified by information from the pedigree file. Using imputed DNA
-genotypes will increase the number of SNPs overlapping with the DNA
-methylation data. Further, note that no quality control was performed
-on the DNAm data (we only have access to the beta-values).
 
 # Detect mislabelled samples #
 

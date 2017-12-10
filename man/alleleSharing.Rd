@@ -6,12 +6,12 @@
 \usage{
 alleleSharing(x, y = NULL, relations = NULL, idx.col = "idx",
   idy.col = "idy", rel.col = "relation_type", callRate = 0.95,
-  coverageRate = 2/3, alpha = 0.05, phasing = FALSE, assayNameX = NULL,
-  assayNameY = NULL, verbose = TRUE)
+  coverageRate = 2/3, alpha = 0.05, maf = 0.05, phasing = FALSE,
+  assayNameX = NULL, assayNameY = NULL, verbose = TRUE)
 }
 \arguments{
-\item{x, y}{genotype matrix with row and column names; if this is a 
-SummarizedExperiment or a MultiAssayExperiment assayName must 
+\item{x, y}{genotype matrix with row and column names; if this is a
+SummarizedExperiment or a MultiAssayExperiment assayName must
 also be specified}
 
 \item{relations}{'data.frame' with relations and their mapping
@@ -34,11 +34,14 @@ SNPs called are set to NA}
 \item{alpha}{significance level for Hardy-Weinberg test default alpha,
 internaly Bonferonni multiple testing will be applied}
 
+\item{maf}{minor allele frequency threshold,
+variants with lower frequency (default 0.05) will be dropped}
+
 \item{phasing}{default FALSE}
 
 \item{assayNameX}{the name of the assay to be used for x (see x, y)}
 
-\item{assayNameY}{same as assayNameX, but for y; if y is not 
+\item{assayNameY}{same as assayNameX, but for y; if y is not
 specified, the assay will be retreived from x}
 
 \item{verbose}{show progress default TRUE}

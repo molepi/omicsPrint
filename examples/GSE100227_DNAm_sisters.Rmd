@@ -47,6 +47,7 @@ bibliography: omicsPrint.bib
 
 
 ## Retrieving sample information
+   
 ```{r}
 library(GEOquery)
 ##gset <- getGEO("GSE100227", GSEMatrix=TRUE, AnnotGPL=FALSE)
@@ -60,6 +61,7 @@ rownames(samples) <- samples$description
 ```
 
 ## Retrieving beta values
+   
 Unfortunately the data retrieved from GEO above does not include the beta values.
 These values instead as provided in a supplementary file.
 
@@ -79,6 +81,7 @@ d <- d[, !colnames(d) == "ID_REF"]
 ```
 
 ## Determine relationships
+   
 ```{r}
 r <- expand.grid(idx=rownames(samples), idy=rownames(samples))
 
@@ -105,6 +108,7 @@ head(r)
 ```
 
 ## Filter probes
+   
 ```{r}
 library(omicsPrint)
 library(GenomicRanges)
@@ -116,6 +120,7 @@ d2 <- d[cpgs,]
 ```
 
 ## Check relationships
+   
 ```{r}
 gt <- beta2genotype(d2)
 data <- alleleSharing(gt, relations = r, verbose = TRUE)

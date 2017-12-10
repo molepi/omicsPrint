@@ -8,8 +8,8 @@ beta2genotype(betas, na.rm = TRUE, minSep = 0.25, minSize = 5,
   centers = c(0.2, 0.5, 0.8), assayName = NULL)
 }
 \arguments{
-\item{betas}{beta matrix of probes possibly affected SNPs; if this is a 
-SummarizedExperiment or a MultiAssayExperiment assayName must also be 
+\item{betas}{beta matrix of probes possibly affected SNPs; if this is a
+SummarizedExperiment or a MultiAssayExperiment assayName must also be
 specified}
 
 \item{na.rm}{TRUE drop cpg for which no clustering was observed}

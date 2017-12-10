@@ -34,7 +34,7 @@ abstract: >
   is directly measured or inferred from for example RNA-seq or
   DNA methylation array data.    	  
 output: 
-  BiocStyle::html_document:
+  html_document:
     toc: true
     toc_float:
       collapsed: false
@@ -124,6 +124,7 @@ be adjusted see `?alleleSharing`):
 1. a SNP is remove if missing in >5% of the samples (`callRate = 0.95`)
 2. a sample should have at least 2/3 of the SNPs called (`coverageRate = 2/3`)
 3. a SNP is removed if it violates the Hardy-Weinberg equilibrium (`alpha = 0.05`).
+4. a SNP is removed if the minor allele frequency is below the given threshold (`maf = 0.05`)   
 
 Hardy-Weinberg test-statistics is calculated using a $\chi^2$-test and
 Bonferonni multiple testing correction is performed.
@@ -132,7 +133,6 @@ Bonferonni multiple testing correction is performed.
 ```{r, data}
 data
 ```
-
 	
 By default no relations are assumed except for the self-self
 relations.
