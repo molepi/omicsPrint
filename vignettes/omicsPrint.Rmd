@@ -258,7 +258,7 @@ while(value != 0  & cnt < 25) {
     value = download.file("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE100nnn/GSE100940/matrix/GSE100940_series_matrix.txt.gz", file)
     cnt <- cnt + 1
 }
-gset <- getGEO(filename=file)
+gset <- getGEO(filename=file, getGPL=FALSE)
 ```
 			
 ```{r downloaddata, eval=FALSE}
@@ -266,7 +266,7 @@ library(GEOquery)
 library(SummarizedExperiment)
 file <- tempfile()
 download.file("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE100nnn/GSE100940/matrix/GSE100940_series_matrix.txt.gz", file)
-gset <- getGEO(filename=file)
+gset <- getGEO(filename=file, getGPL=FALSE)
 ```
 
 Next we convert the returned object into a 
