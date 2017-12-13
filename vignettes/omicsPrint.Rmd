@@ -251,7 +251,7 @@ First we extract the data from GEO using the
 ```{r downloadretry, include=FALSE}
 library(GEOquery)
 library(SummarizedExperiment)
-file <- tempfile()
+file <- tempfile(fileext = ".txt.gz")
 cnt <- 0
 value <- -1
 while(value != 0  & cnt < 25) {
