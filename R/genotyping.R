@@ -133,14 +133,14 @@
     relations
 }
 
-.hardyweinberg <- function(x, alpha=0.05){
+.hardyweinberg <- function(x, alpha=0){
 
     ##fix single SNP case
     if(!is.matrix(x))
         x <- matrix(x, nrow=1, ncol=3)
-    
+
     obs <- rowTabulates(matrix(as.integer(x), nrow=nrow(x)))
-    
+
     n <- ncol(x)
     p <- (2*obs[,1] + obs[,2])/(2*n)
     q <- 1 - p
@@ -156,7 +156,7 @@
     inEquilibrium
 }
 
-.pruning <- function(x, callRate=0.95, coverageRate=2/3, alpha = 0.05, maf = 0.05, verbose=TRUE) {
+.pruning <- function(x, callRate=0.95, coverageRate=2/3, alpha = 0, maf = 0, verbose=TRUE) {
     nsnps <- nrow(x)
     nsamples <- ncol(x)
 
@@ -164,15 +164,15 @@
 
     if ( verbose )
         message("Pruning ", nrow(x), " SNPs ...")
-    
-    x[x == 0] <- NA    
+
+    x[x == 0] <- NA
     calledSNPs <- apply(x, 1, function(x) sum(!is.na(x))/nsamples)
 
     if( verbose )
         message(sum(calledSNPs <= callRate), " SNPs removed because of low call rate!")
 
-    x <- x[calledSNPs >= callRate,, drop=FALSE] 
-    
+    x <- x[calledSNPs >= callRate,, drop=FALSE]
+
     ##if the coverage of called SNPs is not larger then coverageRate do
     ##not calculate IBS
     coverage <- apply(x, 2, function(x) sum(!is.na(x))/nsnps)
@@ -184,23 +184,29 @@
 
     ##Exclude SNP that violate Hardy-Weinberg principle
     ##not calculate IBS
-    inEquilibrium <- .hardyweinberg(x, alpha = alpha)
+    if (alpha > 0 & alpha <= 1) {
+        inEquilibrium <- .hardyweinberg(x, alpha = alpha)
 
-    if( verbose )
-        message(sum(!inEquilibrium), " SNPs removed because they violate Hardy-Weinberg equilibrium!")
+        if( verbose )
+            message(sum(!inEquilibrium), " SNPs removed because they violate Hardy-Weinberg equilibrium!")
 
-    x <- x[inEquilibrium,, drop=FALSE] ##keep these
+        x <- x[inEquilibrium,, drop=FALSE] ##keep these
+    }
+
+    if (maf > 0 & maf <= 1) {
+        ## Remove low frequent SNPs
+        mafs <- apply(x, 1, function(x) {
+            freq = min(table(x)/length(x))
+            ifelse(freq < 0.5, freq, 1-freq)
+        })
+
+        if( verbose )
+            message(sum(mafs < maf), " SNPs removed because they have minor allele frequency <", maf, "!")
+
+        x <- x[mafs >= maf,, drop=FALSE] ##keep these
+    }
     
-    ## Remove low frequent SNPs
-    mafs <- apply(x, 1, function(x) {
-        freq = min(table(x)/length(x))
-        ifelse(freq < 0.5, freq, 1-freq)
-    })
-
-    if( verbose )
-        message(sum(mafs < maf), " SNPs removed because they have minor allele frequency <", maf, "!")
-
-     x[mafs >= maf,, drop=FALSE] ##keep these
+    x
 }
 
 ##' Run the allele sharing algorithm based on ibs
@@ -235,10 +241,10 @@
 ##'     threshold are dropped
 ##' @param coverageRate default 2/3 samples with less then threshold
 ##'     SNPs called are set to NA
-##' @param alpha significance level for Hardy-Weinberg test default alpha,
-##' internaly Bonferonni multiple testing will be applied
+##' @param alpha significance level for Hardy-Weinberg test default alpha = 0,
+##' no filtering, internaly Bonferonni multiple testing will be applied
 ##' @param maf minor allele frequency threshold,
-##' variants with lower frequency (default 0.05) will be dropped
+##' variants with lower frequency (default 0 no filtering) will be dropped
 ##' @param phasing default FALSE
 ##' @param assayNameX the name of the assay to be used for x (see x, y)
 ##' @param assayNameY same as assayNameX, but for y; if y is not
@@ -268,7 +274,7 @@
 alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx",
                           idy.col="idy", rel.col="relation_type",
                           callRate=0.95, coverageRate=2/3,
-                          alpha = 0.05, maf = 0.05, phasing=FALSE,
+                          alpha = 0, maf = 0, phasing=FALSE,
                           assayNameX=NULL, assayNameY=NULL, verbose=TRUE) {
 
     if(!is.null(y)) {

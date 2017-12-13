@@ -6,7 +6,7 @@
 \usage{
 alleleSharing(x, y = NULL, relations = NULL, idx.col = "idx",
   idy.col = "idy", rel.col = "relation_type", callRate = 0.95,
-  coverageRate = 2/3, alpha = 0.05, maf = 0.05, phasing = FALSE,
+  coverageRate = 2/3, alpha = 0, maf = 0, phasing = FALSE,
   assayNameX = NULL, assayNameY = NULL, verbose = TRUE)
 }
 \arguments{
@@ -31,11 +31,11 @@ threshold are dropped}
 \item{coverageRate}{default 2/3 samples with less then threshold
 SNPs called are set to NA}
 
-\item{alpha}{significance level for Hardy-Weinberg test default alpha,
-internaly Bonferonni multiple testing will be applied}
+\item{alpha}{significance level for Hardy-Weinberg test default alpha = 0,
+no filtering, internaly Bonferonni multiple testing will be applied}
 
 \item{maf}{minor allele frequency threshold,
-variants with lower frequency (default 0.05) will be dropped}
+variants with lower frequency (default 0 no filtering) will be dropped}
 
 \item{phasing}{default FALSE}
 

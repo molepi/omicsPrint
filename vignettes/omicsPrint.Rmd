@@ -123,8 +123,8 @@ be adjusted see `?alleleSharing`):
        
 1. a SNP is remove if missing in >5% of the samples (`callRate = 0.95`)
 2. a sample should have at least 2/3 of the SNPs called (`coverageRate = 2/3`)
-3. a SNP is removed if it violates the Hardy-Weinberg equilibrium (`alpha = 0.05`).
-4. a SNP is removed if the minor allele frequency is below the given threshold (`maf = 0.05`)   
+3. a SNP is can be removed if it violates the Hardy-Weinberg equilibrium (`alpha = 0`).
+4. a SNP is can be removed if the minor allele frequency is below the given threshold (`maf = 0`)   
 
 Hardy-Weinberg test-statistics is calculated using a $\chi^2$-test and
 Bonferonni multiple testing correction is performed.
