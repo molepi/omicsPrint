@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2017-12-13" />
+<meta name="date" content="2017-12-14" />
 
 <title>omicsPrint: detection of data linkage errors in multiple omics studies</title>
 
@@ -249,7 +249,7 @@ Department of Medical Statistics and Bioinformatics, Section Moleculair Epidemio
 <address class="author_afil">
 Department of Medical Statistics and Bioinformatics, Section Moleculair Epidemiology, Leiden University Medical Center, Leiden, The Netherlands<br><a class="author_email" href="mailto:#"><a href="mailto:b.t.heijmans@lumc.nl">b.t.heijmans@lumc.nl</a></a>
 </address>
-<h4 class="date"><em>2017-12-13</em></h4>
+<h4 class="date"><em>2017-12-14</em></h4>
 <div class="abstract">
 <p class="abstract">Abstract</p>
 <p>The Aanalysis of multiple omics datatypes from the same individuals is becoming increasingly common. For example, several data repositories contain genetic, transcriptomic and epigenetic (DNA methylation) measurements on the same individuals, e.g., TCGA, Geuvadis, BBMRI/BIOS, etc. However, errors in the data linkage are almost inevitable in such complex projects (e.g. due to sample mix-ups) and unknown family relationships may be present. If not corrected, such errors may introduce false positive or false negative findings. To streamline necessary quality control, wWe have developed a tool to reliably verify the sample relationships between and across omics data types using genotype data that is directly measured or inferred from for example RNA-seq or DNA methylation array data.</p>
@@ -290,8 +290,7 @@ x &lt;- cbind(x1, x2, x3, x4)</code></pre>
 <div id="running-the-allelesharing-algorithm" class="section level2">
 <h2>Running the <code>allelesharing</code> algorithm</h2>
 <p>We use Identity by State (IBS) for the set of SNPs to infer sample relations. See <span class="citation">Abecasis et al. (2001)</span>, for the description of this approach applied to genetic data. Briefly, between each sample pair, the IBS-vector is calculated, which is a measure of genetic distance between individuals. Next, the vector is summarized by its mean and variance. A mean of 2 and variance of 0 indicates that the samples are identical.</p>
-<pre class="r"><code>library(omicsPrint)
-data &lt;- alleleSharing(x, verbose=TRUE)</code></pre>
+<pre class="r"><code>data &lt;- alleleSharing(x, verbose=TRUE)</code></pre>
 <pre><code>## Hash relations</code></pre>
 <pre><code>## Pruning 100 SNPs ...</code></pre>
 <pre><code>## 0 SNPs removed because of low call rate!</code></pre>
@@ -484,19 +483,19 @@ Scatter-plot of IBS mean and variance with classification boundaries for pairwis
 <p>First we extract the data from GEO using the <a href="http://bioconductor.org/packages/GEOquery/"><em>GEOquery</em></a>-package.</p>
 <pre class="r"><code>library(GEOquery)
 library(SummarizedExperiment)
-file &lt;- tempfile()
+file &lt;- tempfile(fileext = &quot;.txt.gz&quot;)
 download.file(&quot;ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE100nnn/GSE100940/matrix/GSE100940_series_matrix.txt.gz&quot;, file)
 gset &lt;- getGEO(filename=file, getGPL=FALSE)</code></pre>
 <p>Next we convert the returned object into a <a href="http://bioconductor.org/packages/SummarizedExperiment/"><em>SummarizedExperiment</em></a>:</p>
 <pre class="r"><code>se &lt;- makeSummarizedExperimentFromExpressionSet(gset)
 se</code></pre>
 <pre><code>## class: RangedSummarizedExperiment 
-## dim: 485577 24 
+## dim: 485572 24 
 ## metadata(3): experimentData annotation protocolData
 ## assays(1): exprs
-## rownames(485577): cg00000029 cg00000108 ... rs966367 rs9839873
+## rownames(485572): cg00000289 cg00000292 ... rs966367 rs9839873
 ## rowData names(0):
-## colnames(24): GSM2696882 GSM2696883 ... GSM2696904 GSM2696905
+## colnames(24): X0.78198 X0.7367728 ... X0.8016921 X0.8701804
 ## colData names(32): title geo_accession ... supplementary_file.1
 ##   data_row_count</code></pre>
 <p>Sample data can be extracted from the <code>SummarizedExperiment</code>-object using the <code>colData</code>-function and we can see which pair of twins each sample belongs to through the <code>source_name_ch1</code> field. Using this knowledge we can construct a table of expected relationships:</p>
@@ -509,13 +508,13 @@ r$relation_type &lt;- &quot;unrelated&quot;
 r$relation_type[r$Xpair == r$Ypair] &lt;- &quot;twin&quot;
 r$relation_type[r$idx == r$idy] &lt;- &quot;identical&quot;
 head(r)</code></pre>
-<pre><code>##          idx        idy Xpair Ypair relation_type
-## 1 GSM2696882 GSM2696882   M01   M01     identical
-## 2 GSM2696883 GSM2696882   M01   M01          twin
-## 3 GSM2696884 GSM2696882   M02   M01     unrelated
-## 4 GSM2696885 GSM2696882   M02   M01     unrelated
-## 5 GSM2696886 GSM2696882   M03   M01     unrelated
-## 6 GSM2696887 GSM2696882   M03   M01     unrelated</code></pre>
+<pre><code>##          idx      idy Xpair Ypair relation_type
+## 1   X0.78198 X0.78198   M01   M01     identical
+## 2 X0.7367728 X0.78198   M01   M01          twin
+## 3 X0.7796773 X0.78198   M02   M01     unrelated
+## 4  X0.746217 X0.78198   M02   M01     unrelated
+## 5 X0.7572916 X0.78198   M03   M01     unrelated
+## 6  X0.791267 X0.78198   M03   M01     unrelated</code></pre>
 <p>Several probes on the array contain SNPs occurring frequently in different populations<span class="citation">(Chen et al. 2013; Zhou, Laird, and Shen 2016)</span>. We can use these to verify the expected relationships. We have made these data available from inside of this package.</p>
 <p>Now we make a selection of CpGs probably affected by polymorphic SNPS in populations from East Asian, as these samples are from South Korea:</p>
 <pre class="r"><code>data(hm450.manifest.pop.GoNL)
@@ -527,12 +526,12 @@ se &lt;- se[cpgs,]</code></pre>
 dim(dnamCalls)</code></pre>
 <pre><code>## [1] 821  24</code></pre>
 <pre class="r"><code>dnamCalls[1:5, 1:5]</code></pre>
-<pre><code>##            GSM2696882 GSM2696883 GSM2696884 GSM2696885 GSM2696886
-## cg09762182          3          3          1          1          3
-## cg25282454          3          3          2          2          2
-## cg24345856          3          3          2          2          2
-## cg13167158          3          3          3          3          1
-## cg12213037          2          2          3          3          3</code></pre>
+<pre><code>##            X0.78198 X0.7367728 X0.7796773 X0.746217 X0.7572916
+## cg09762182        3          3          1         1          3
+## cg25282454        3          3          2         2          2
+## cg24345856        3          3          2         2          2
+## cg13167158        3          3          3         3          1
+## cg12213037        2          2          3         3          3</code></pre>
 <p>The DNA methylation based genotype calls can be directly supplied to the allelesharing algorithm to perform the intra-omic sample matching:</p>
 <pre class="r"><code>data &lt;- alleleSharing(dnamCalls, relations = r, verbose = TRUE)</code></pre>
 <pre><code>## Hash relations</code></pre>
@@ -551,18 +550,18 @@ Scatter-plot of IBS mean and variance with classification boundaries for pairwis
 </div>
 <pre class="r"><code>mismatches</code></pre>
 <pre><code>##         mean         var colnames.x colnames.y relation predicted
-## 2   1.995128 0.004854282 GSM2696883 GSM2696882     twin identical
-## 49  1.997564 0.002433083 GSM2696885 GSM2696884     twin identical
-## 92  1.991474 0.008463801 GSM2696887 GSM2696886     twin identical
-## 131 1.995128 0.004854282 GSM2696889 GSM2696888     twin identical
-## 166 1.995128 0.004854282 GSM2696891 GSM2696890     twin identical
-## 197 1.995128 0.004854282 GSM2696893 GSM2696892     twin identical
-## 224 1.996346 0.003645168 GSM2696895 GSM2696894     twin identical
-## 247 2.000000 0.000000000 GSM2696897 GSM2696896     twin identical
-## 266 1.995128 0.004854282 GSM2696899 GSM2696898     twin identical
-## 281 1.992692 0.007263599 GSM2696901 GSM2696900     twin identical
-## 292 1.993910 0.006060426 GSM2696903 GSM2696902     twin identical
-## 299 1.993910 0.006060426 GSM2696905 GSM2696904     twin identical</code></pre>
+## 2   1.995128 0.004854282 X0.7367728   X0.78198     twin identical
+## 49  1.997564 0.002433083  X0.746217 X0.7796773     twin identical
+## 92  1.991474 0.008463801  X0.791267 X0.7572916     twin identical
+## 131 1.995128 0.004854282 X0.7827371 X0.7656295     twin identical
+## 166 1.995128 0.004854282 X0.7877404  X0.766961     twin identical
+## 197 1.995128 0.004854282 X0.8374685 X0.8321307     twin identical
+## 224 1.996346 0.003645168 X0.7442845 X0.7399069     twin identical
+## 247 2.000000 0.000000000 X0.7982959 X0.8037069     twin identical
+## 266 1.995128 0.004854282  X0.833827  X0.775218     twin identical
+## 281 1.992692 0.007263599 X0.7498735  X0.793403     twin identical
+## 292 1.993910 0.006060426 X0.7657012 X0.7426056     twin identical
+## 299 1.993910 0.006060426 X0.8701804 X0.8016921     twin identical</code></pre>
 <p>The twins are predicted as being identical to each other. This is not unexpected as they are monozygotic.</p>
 </div>
 <div id="sessioninfo" class="section level1">
@@ -589,45 +588,39 @@ Scatter-plot of IBS mean and variance with classification boundaries for pairwis
 ## [8] methods   base     
 ## 
 ## other attached packages:
-##  [1] omicsPrint_0.99.30         SummarizedExperiment_1.6.5
-##  [3] DelayedArray_0.2.7         matrixStats_0.52.2        
-##  [5] GenomicRanges_1.28.6       GenomeInfoDb_1.12.3       
-##  [7] IRanges_2.10.5             S4Vectors_0.14.7          
-##  [9] GEOquery_2.42.0            Biobase_2.36.2            
-## [11] BiocGenerics_0.22.1        BiocStyle_2.4.1           
-## [13] rmarkdown_1.8              MASS_7.3-47               
-## [15] devtools_1.13.4           
+##  [1] BiocStyle_2.4.1            omicsPrint_0.99.30        
+##  [3] MASS_7.3-47                rmarkdown_1.8             
+##  [5] SummarizedExperiment_1.6.5 DelayedArray_0.2.7        
+##  [7] matrixStats_0.52.2         GenomicRanges_1.28.6      
+##  [9] GenomeInfoDb_1.12.3        IRanges_2.10.5            
+## [11] S4Vectors_0.14.7           GEOquery_2.42.0           
+## [13] Biobase_2.36.2             BiocGenerics_0.22.1       
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] Rcpp_0.12.14               lattice_0.20-35           
-##  [3] tidyr_0.7.2                assertthat_0.2.0          
-##  [5] rprojroot_1.2              digest_0.6.12             
-##  [7] mime_0.5                   R6_2.2.2                  
-##  [9] plyr_1.8.4                 backports_1.1.1           
-## [11] evaluate_0.10.1            BiocInstaller_1.26.1      
-## [13] highr_0.6                  httr_1.3.1                
-## [15] ggplot2_2.2.1              zlibbioc_1.22.0           
-## [17] rlang_0.1.4                lazyeval_0.2.1            
-## [19] Matrix_1.2-12              desc_1.1.1                
-## [21] stringr_1.2.0              RCurl_1.95-4.8            
-## [23] munsell_0.4.3              shiny_1.0.5               
-## [25] compiler_3.5.0             httpuv_1.3.5              
-## [27] htmltools_0.3.6            tibble_1.3.4              
-## [29] gridExtra_2.3              GenomeInfoDbData_0.99.0   
-## [31] roxygen2_6.0.1             XML_3.98-1.9              
-## [33] crayon_1.3.4               withr_2.1.0               
-## [35] bitops_1.0-6               commonmark_1.4            
-## [37] grid_3.5.0                 xtable_1.8-2              
-## [39] gtable_0.2.0               git2r_0.19.0              
-## [41] magrittr_1.5               scales_0.5.0              
-## [43] stringi_1.1.6              XVector_0.16.0            
-## [45] reshape2_1.4.2             MultiAssayExperiment_1.2.1
-## [47] testthat_1.0.2             xml2_1.1.1                
-## [49] tools_3.5.0                RaggedExperiment_1.0.0    
-## [51] glue_1.2.0                 purrr_0.2.4               
-## [53] yaml_2.1.15                colorspace_1.3-2          
-## [55] UpSetR_1.3.3               shinydashboard_0.6.1      
-## [57] memoise_1.1.0              knitr_1.17</code></pre>
+##  [1] reshape2_1.4.2             purrr_0.2.4               
+##  [3] lattice_0.20-35            colorspace_1.3-2          
+##  [5] htmltools_0.3.6            yaml_2.1.15               
+##  [7] XML_3.98-1.9               rlang_0.1.4               
+##  [9] glue_1.2.0                 GenomeInfoDbData_0.99.0   
+## [11] plyr_1.8.4                 stringr_1.2.0             
+## [13] zlibbioc_1.22.0            munsell_0.4.3             
+## [15] gtable_0.2.0               evaluate_0.10.1           
+## [17] knitr_1.17                 UpSetR_1.3.3              
+## [19] httpuv_1.3.5               MultiAssayExperiment_1.2.1
+## [21] highr_0.6                  Rcpp_0.12.14              
+## [23] xtable_1.8-2               backports_1.1.1           
+## [25] scales_0.5.0               RaggedExperiment_1.0.0    
+## [27] XVector_0.16.0             mime_0.5                  
+## [29] gridExtra_2.3              ggplot2_2.2.1             
+## [31] digest_0.6.12              stringi_1.1.6             
+## [33] shiny_1.0.5                grid_3.5.0                
+## [35] rprojroot_1.2              tools_3.5.0               
+## [37] bitops_1.0-6               magrittr_1.5              
+## [39] RCurl_1.95-4.8             lazyeval_0.2.1            
+## [41] tibble_1.3.4               tidyr_0.7.2               
+## [43] Matrix_1.2-12              shinydashboard_0.6.1      
+## [45] httr_1.3.1                 R6_2.2.2                  
+## [47] compiler_3.5.0</code></pre>
 </div>
 <div id="reference" class="section level1 unnumbered">
 <h1>Reference</h1>

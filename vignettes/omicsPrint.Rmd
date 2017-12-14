@@ -48,8 +48,8 @@ bibliography: omicsPrint.bib
 
 ```{r setup, include=FALSE}
 set.seed(22062017)
-library(BiocStyle)
 library(omicsPrint)
+library(BiocStyle)
 library(GEOquery)
 library(SummarizedExperiment)
 ```
@@ -112,7 +112,6 @@ mean and variance. A mean of 2 and variance of 0 indicates that the
 samples are identical. 
 
 ```{r, alleleSharing}
-library(omicsPrint)
 data <- alleleSharing(x, verbose=TRUE)
 ```
 
@@ -251,7 +250,7 @@ First we extract the data from GEO using the
 ```{r downloadretry, include=FALSE}
 library(GEOquery)
 library(SummarizedExperiment)
-file <- tempfile()
+file <- tempfile(fileext = ".txt.gz")
 cnt <- 0
 value <- -1
 while(value != 0  & cnt < 25) {
@@ -264,7 +263,7 @@ gset <- getGEO(filename=file, getGPL=FALSE)
 ```{r downloaddata, eval=FALSE}
 library(GEOquery)
 library(SummarizedExperiment)
-file <- tempfile()
+file <- tempfile(fileext = ".txt.gz")
 download.file("ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE100nnn/GSE100940/matrix/GSE100940_series_matrix.txt.gz", file)
 gset <- getGEO(filename=file, getGPL=FALSE)
 ```
