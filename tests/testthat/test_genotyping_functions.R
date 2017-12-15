@@ -31,7 +31,7 @@ test_that("pruning properly drops SNPs", {
                 dimnames=list(paste0("SNP", 1:6),
                               paste0("sample", 1:3)))
     ##do the testing
-    expect_equal(.pruning(x, verbose=FALSE), x[4:6,])
+    expect_equal(.pruning(x, alpha=0.05, maf=0.05, verbose=FALSE), x[4:6,])
 
 })
 
