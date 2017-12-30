@@ -10,7 +10,7 @@ Description: omicsPrint provides functionality for cross omic genetic
 	fingerprinting, for example, to verify sample relationships between
 	multiple omics data types, i.e. genomic, transcriptomic and epigenetic
 	(DNA methylation).
-Depends: R (>= 3.5), MASS
+Depends: R (>= 3.4), MASS
 Imports: methods, matrixStats, graphics, stats, SummarizedExperiment,
 	MultiAssayExperiment, RaggedExperiment
 Suggests: BiocStyle, knitr, rmarkdown, testthat, GEOquery,
