@@ -58,7 +58,7 @@
 }
 
 
-.phasing <- function(x, y, rHash) {
+.phasing <- function(x, y, rHash, verbose) {
     ##relabel those in x according to those in y
 
     ##relabelling is based on the idea that snp's in x should be
@@ -85,16 +85,33 @@
     midx <- match(colnames.x, colnames(x))
     midy <- match(colnames.y, colnames(y))
 
-    signs <- sign(unlist(lapply(seq_len(nrow(x)), function(i)
-        cov(x[i,midx], y[i,midy], use="complete.obs", method="spearman"))))
+    ##correlation based phasing not always correct
+    ##signs <- sign(unlist(lapply(seq_len(nrow(x)), function(i)
+    ##    cov(x[i,midx], y[i,midy], use="complete.obs", method="spearman"))))
+
+    swaps <- unlist(lapply(seq_len(nrow(x)), function(i) {
+        sum(x[i,midx] == 1 & y[i,midy] == 3) + sum(x[i,midx] == 3 & y[i,midy] == 1) >
+            sum(x[i,midx] == 1 & y[i,midy] == 1) + sum(x[i,midx] == 3 & y[i,midy] == 3)
+    }))
+
+    if(verbose)
+        message("Swapping ", sum(swaps), " alleles!")
 
     for(i in seq_len(nrow(x))) {
-        if( signs[i] < 0 ) {
+        if( swaps[i]) {
             xi <- x[i,]
             x[i, xi==1] <- 3
             x[i, xi==3] <- 1
         }
     }
+
+    ## swaps <- unlist(lapply(seq_len(nrow(x)), function(i) {
+    ##     sum(x[i,midx] == 1 & y[i,midy] == 3) + sum(x[i,midx] == 3 & y[i,midy] == 1) >
+    ##         sum(x[i,midx] == 1 & y[i,midy] == 1) + sum(x[i,midx] == 3 & y[i,midy] == 3)
+    ## }))
+
+    ## print(table(swaps))
+
     x
 }
 
@@ -205,7 +222,7 @@
 
         x <- x[mafs >= maf,, drop=FALSE] ##keep these
     }
-    
+
     x
 }
 
@@ -345,7 +362,7 @@ alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx",
         y <- y[rId,]
 
         if( phasing )
-            x <- .phasing(x, y, rHash)
+            x <- .phasing(x, y, rHash, verbose)
 
         if( verbose )
             message("Using ", nrow(x),
