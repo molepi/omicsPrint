@@ -85,8 +85,14 @@
     midx <- match(colnames.x, colnames(x))
     midy <- match(colnames.y, colnames(y))
 
-    signs <- sign(unlist(lapply(seq_len(nrow(x)), function(i)
-        cov(x[i,midx], y[i,midy], use="complete.obs", method="spearman"))))
+    #correlation based phasing
+    #signs <- sign(unlist(lapply(seq_len(nrow(x)), function(i)
+    #    cov(x[i,midx], y[i,midy], use="complete.obs", method="spearman"))))
+
+    signs <- sign(unlist(lapply(seq_len(nrow(x)), function(i) {
+        M <- table([i,midx], y[i,midy])
+        sum(M) - 2*sum(diag(M))
+    })))
 
     for(i in seq_len(nrow(x))) {
         if( signs[i] < 0 ) {
@@ -138,9 +144,9 @@
     ##fix single SNP case
     if(!is.matrix(x))
         x <- matrix(x, nrow=1, ncol=3)
-    
+
     obs <- rowTabulates(matrix(as.integer(x), nrow=nrow(x)))
-    
+
     n <- ncol(x)
     p <- (2*obs[,1] + obs[,2])/(2*n)
     q <- 1 - p
@@ -164,15 +170,15 @@
 
     if ( verbose )
         message("Pruning ", nrow(x), " SNPs ...")
-    
-    x[x == 0] <- NA    
+
+    x[x == 0] <- NA
     calledSNPs <- apply(x, 1, function(x) sum(!is.na(x))/nsamples)
 
     if( verbose )
         message(sum(calledSNPs <= callRate), " SNPs removed because of low call rate!")
 
-    x <- x[calledSNPs >= callRate,, drop=FALSE] 
-    
+    x <- x[calledSNPs >= callRate,, drop=FALSE]
+
     ##if the coverage of called SNPs is not larger then coverageRate do
     ##not calculate IBS
     coverage <- apply(x, 2, function(x) sum(!is.na(x))/nsnps)
@@ -190,7 +196,7 @@
         message(sum(!inEquilibrium), " SNPs removed because they violate Hardy-Weinberg equilibrium!")
 
     x <- x[inEquilibrium,, drop=FALSE] ##keep these
-    
+
     ## Remove low frequent SNPs
     mafs <- apply(x, 1, function(x) {
         freq = min(table(x)/length(x))
@@ -200,7 +206,7 @@
     if( verbose )
         message(sum(mafs < maf), " SNPs removed because they have minor allele frequency <", maf, "!")
 
-     x[mafs >= maf,, drop=FALSE] ##keep these
+    x[mafs >= maf,, drop=FALSE] ##keep these
 }
 
 ##' Run the allele sharing algorithm based on ibs
