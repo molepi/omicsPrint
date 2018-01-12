@@ -58,7 +58,7 @@
 }
 
 
-.phasing <- function(x, y, rHash, verbose) {
+.phasing <- function(x, y, rHash, verbose = FALSE) {
     ##relabel those in x according to those in y
 
     ##relabelling is based on the idea that snp's in x should be
