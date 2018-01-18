@@ -90,8 +90,10 @@
     ##    cov(x[i,midx], y[i,midy], use="complete.obs", method="spearman"))))
 
     swaps <- unlist(lapply(seq_len(nrow(x)), function(i) {
-        sum(x[i,midx] == 1 & y[i,midy] == 3) + sum(x[i,midx] == 3 & y[i,midy] == 1) >
-            sum(x[i,midx] == 1 & y[i,midy] == 1) + sum(x[i,midx] == 3 & y[i,midy] == 3)
+        sum(x[i,midx] == 1 & y[i,midy] == 3, na.rm=T) + 
+            sum(x[i,midx] == 3 & y[i,midy] == 1, na.rm=T) >
+            sum(x[i,midx] == 1 & y[i,midy] == 1, na.rm=T) +
+            sum(x[i,midx] == 3 & y[i,midy] == 3, na.rm=T)
     }))
 
     if(verbose)
