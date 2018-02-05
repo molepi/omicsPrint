@@ -1,6 +1,6 @@
 context("Genotyping helper functions")
 
-test_that("phasing recovers swapped SNPs", {
+test_that("strand alignment recovers swapped SNPs", {
 
     ##generate some data
     x <- matrix(c(1,1,1, 2, 2, 2, 3, 3, 3), 3,3,
@@ -15,7 +15,7 @@ test_that("phasing recovers swapped SNPs", {
     rHash <- .hashRelations(.constructRelations(xnames = colnames(x),
                                                 ynames = colnames(y)))
     ##do the testing
-    expect_equal(.phasing(x, y, rHash), x)
+    expect_equal(.strandAlignment(x, y, rHash), x)
 })
 
 

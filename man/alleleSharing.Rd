@@ -6,7 +6,7 @@
 \usage{
 alleleSharing(x, y = NULL, relations = NULL, idx.col = "idx",
   idy.col = "idy", rel.col = "relation_type", callRate = 0.95,
-  coverageRate = 2/3, alpha = 0, maf = 0, phasing = FALSE,
+  coverageRate = 2/3, alpha = 0, maf = 0, alignment = FALSE,
   assayNameX = NULL, assayNameY = NULL, verbose = TRUE)
 }
 \arguments{
@@ -37,7 +37,7 @@ no filtering, internaly Bonferonni multiple testing will be applied}
 \item{maf}{minor allele frequency threshold,
 variants with lower frequency (default 0 no filtering) will be dropped}
 
-\item{phasing}{default FALSE}
+\item{alignment}{default FALSE}
 
 \item{assayNameX}{the name of the assay to be used for x (see x, y)}
 
@@ -57,9 +57,9 @@ calculate mean and variance of identity by state between
 genotypes, coded as 1,2,3, of all sample pairs either give one
 omic inferred set of SNPs or two from different omic types.
 
-'phasing' is required if methylation data inferred genotypes are
+'Strand Alignment' is required if methylation data inferred genotypes are
 compared with DNA based genotypes, i.e., DNA based genotype is 3
-whereas methylation is 1. The phasing step will fix this.
+whereas methylation is 1. The strand alignment step will fix this.
 
 Notice that there are two algorithms for calculating allele
 sharing. One for the case one matrix is provided and one for the

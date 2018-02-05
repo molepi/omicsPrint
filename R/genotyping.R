@@ -58,7 +58,7 @@
 }
 
 
-.phasing <- function(x, y, rHash, verbose = FALSE) {
+.strandAlignment <- function(x, y, rHash, verbose = FALSE) {
     ##relabel those in x according to those in y
 
     ##relabelling is based on the idea that snp's in x should be
@@ -85,7 +85,7 @@
     midx <- match(colnames.x, colnames(x))
     midy <- match(colnames.y, colnames(y))
 
-    ##correlation based phasing not always correct
+    ##correlation based on 'Strand Alignment' not always correct
     ##signs <- sign(unlist(lapply(seq_len(nrow(x)), function(i)
     ##    cov(x[i,midx], y[i,midy], use="complete.obs", method="spearman"))))
 
@@ -234,9 +234,9 @@
 ##' genotypes, coded as 1,2,3, of all sample pairs either give one
 ##' omic inferred set of SNPs or two from different omic types.
 ##'
-##' 'phasing' is required if methylation data inferred genotypes are
+##' 'Strand Alignment' is required if methylation data inferred genotypes are
 ##' compared with DNA based genotypes, i.e., DNA based genotype is 3
-##' whereas methylation is 1. The phasing step will fix this.
+##' whereas methylation is 1. The strand alignment step will fix this.
 ##'
 ##' Notice that there are two algorithms for calculating allele
 ##' sharing. One for the case one matrix is provided and one for the
@@ -264,7 +264,7 @@
 ##' no filtering, internaly Bonferonni multiple testing will be applied
 ##' @param maf minor allele frequency threshold,
 ##' variants with lower frequency (default 0 no filtering) will be dropped
-##' @param phasing default FALSE
+##' @param alignment default FALSE
 ##' @param assayNameX the name of the assay to be used for x (see x, y)
 ##' @param assayNameY same as assayNameX, but for y; if y is not
 ##'     specified, the assay will be retreived from x
@@ -293,7 +293,7 @@
 alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx",
                           idy.col="idy", rel.col="relation_type",
                           callRate=0.95, coverageRate=2/3,
-                          alpha = 0, maf = 0, phasing=FALSE,
+                          alpha = 0, maf = 0, alignment=FALSE,
                           assayNameX=NULL, assayNameY=NULL, verbose=TRUE) {
 
     if(!is.null(y)) {
@@ -363,8 +363,8 @@ alleleSharing <- function(x, y=NULL, relations=NULL, idx.col="idx",
         rId <- match(rows, rownames(y))
         y <- y[rId,]
 
-        if( phasing )
-            x <- .phasing(x, y, rHash, verbose)
+        if( alignment )
+            x <- .strandAlignment(x, y, rHash, verbose)
 
         if( verbose )
             message("Using ", nrow(x),
