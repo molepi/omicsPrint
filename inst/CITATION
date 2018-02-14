@@ -1,0 +1,13 @@
+citEntry(entry="article",
+         title = "omicsPrint: DETECTION OF DATA LINKAGE ERRORS IN MULTIPLE OMICS STUDIES",
+         author = personList(person("Maarten", "van Iterson"),
+           as.person("Davy Cats"),
+           as.person("Paul Hop"),
+           as.person("Bastiaan T. Heijmans")),
+         year = 2018,
+         journal = "Bioinformatics",
+         volume = "",
+         issue = "",
+         url = "http://dx.doi.org/10.1093/bioinformatics/bty062",
+         textVersion = 
+         "van Iterson M, et al. (2018) omicsPrint: DETECTION OF DATA LINKAGE ERRORS IN MULTIPLE OMICS STUDIES. Bioinformatics")

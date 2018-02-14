@@ -23,7 +23,8 @@
         if( verbose & (j %% 100 == 0 | j == 1) & (N > 10 | M >10))
             message(j*N, " of ", N*M, " (", round(100*j/M, 2), "%) ...")
     }
-    data.frame(mean=mn, var=s2, colnames.x=rep(colnames(x), M),
+    data.frame(mean=mn, var=s2,
+               colnames.x=rep(colnames(x), M),
                colnames.y=rep(colnames(y), each=N))
 }
 
@@ -52,6 +53,7 @@
             message(k, " of ", N*(N+1)/2, " (", round(100*k/(N*(N+1)/2), 2),
                     "%) ...")
     }
+
     data.frame(mean=mn, var=s2,
                colnames.x=unlist(sapply(1:N, function(k) colnames(x)[k:N])),
                colnames.y=rep(colnames(y), N:1))
@@ -90,10 +92,10 @@
     ##    cov(x[i,midx], y[i,midy], use="complete.obs", method="spearman"))))
 
     swaps <- unlist(lapply(seq_len(nrow(x)), function(i) {
-        sum(x[i,midx] == 1 & y[i,midy] == 3, na.rm=T) + 
-            sum(x[i,midx] == 3 & y[i,midy] == 1, na.rm=T) >
-            sum(x[i,midx] == 1 & y[i,midy] == 1, na.rm=T) +
-            sum(x[i,midx] == 3 & y[i,midy] == 3, na.rm=T)
+        sum(x[i,midx] == 1 & y[i,midy] == 3, na.rm=TRUE) + 
+            sum(x[i,midx] == 3 & y[i,midy] == 1, na.rm=TRUE) >
+            sum(x[i,midx] == 1 & y[i,midy] == 1, na.rm=TRUE) +
+            sum(x[i,midx] == 3 & y[i,midy] == 3, na.rm=TRUE)
     }))
 
     if(verbose)
